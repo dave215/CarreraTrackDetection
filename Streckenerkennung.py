@@ -5,13 +5,18 @@ import numpy as np
 # Rand der Maske finden
 def rand_finden(rand_x, rand_y, step_x, step_y):
     while mask[rand_y, rand_x] != 0:
-        # img_strecke[rand1_y, rand1_x] = (255, 0, 0)  # Strecke blau markieren
+        img_strecke2[rand_y, rand_x] = (0, 255, 0)  # Strecke markieren
         rand_x += step_x
         rand_y += step_y
 
     # Letzten Schritt rückgängig machen, da nun außerhalb der Strecke
     rand_x -= step_x
     rand_y -= step_y
+    # img_strecke[rand_y, rand_x] = (0, 0, 0)  # Letzte Markierung löschen
+
+    if (img_strecke[rand_y - 1:rand_y + 1, rand_x - 1:rand_x + 1] != (0, 0, 0)).any():
+        return 0, 0
+
     # Markiere Randpunkt im neuen Streckenbild
     # cv.circle(img_strecke, (rand1_x, rand1_y), 20, (0, 255, 0), 3)
     return rand_x, rand_y
@@ -25,6 +30,9 @@ def rand_ablaufen(kante_x, kante_y, farbe):
     test_list_x = (-1, 0, 1, 1, 1, 0, -1, -1, -1)
     test_list_y = (-1, -1, -1, 0, 1, 1, 1, 0, -1)
 
+    rand_x = kante_x
+    rand_y = kante_y
+
     # Stoppen, falls "verlaufen"
     while count < 10000:
         count += 1
@@ -36,7 +44,7 @@ def rand_ablaufen(kante_x, kante_y, farbe):
             new_y = kante_y + test_list_y[i]
             diff = abs(int(last_color) - int(mask[new_y, new_x]))
             # wenn Differenz größer als 100 (also neuer Punkt im anderen Bereich) und Kante dort noch nicht gefunden
-            if diff > 100 and (img_strecke[new_y, new_x, 2] == 0 and img_strecke[new_y, new_x, 0] == 0):
+            if diff > 100 and (img_strecke[new_y, new_x] == (0, 0, 0)).all():
                 # wenn Bild nicht schwarz, also in Strecke: vorherigen Punkt nehmen (der in Strecke war),
                 # der zuletzt getestet wurde, als neuen Kantenpunkt festlegen
                 if last_color != 0:
@@ -48,17 +56,23 @@ def rand_ablaufen(kante_x, kante_y, farbe):
                     kante_y += test_list_y[i]
                 # print(test1_x, test1_y, mask[test1_y, test1_x], i)
                 break
+
             # Aktuellen Punkt als vorherigen Farbtestpunkt setzen
             last_color = mask[new_y, new_x]
 
         if mask[kante_y, kante_x] == 0:
             print('Error')
             break
-        if kante_x == rand1_x and kante_y == rand1_y and count > 100:
+        if kante_x == rand_x and kante_y == rand_y:
             print('start reached, count = ', count)
             break
+
         # gefundenen Punkt der Kante rot einfärben
         img_strecke[kante_y, kante_x] = farbe
+        img_strecke2[kante_y, kante_x] = farbe
+    return count
+
+# CODE START
 
 
 # Definiere Farb-Ranges
@@ -68,7 +82,8 @@ lower_color = (lower_value, lower_value, lower_value)
 upper_color = (upper_value, upper_value, upper_value)
 
 # Lese Bild von Festplatte
-img = cv.imread('D:/samir/Dokumente/Studium/DHBW/Semester_5/Studienarbeit/Quellcode/Images/Oval3_7.jpg')
+# img = cv.imread('D:/samir/Dokumente/Studium/DHBW/Semester_5/Studienarbeit/Quellcode/Images/Oval3_7.jpg')
+img = cv.imread('C:/Users/David/Documents/Studium/_Semester 5/Studienarbeit/Streckenbilder/OvaleStrecken/Oval3_7.jpg')
 
 # Erstelle eine Kopie vom Bild
 frame = img.copy()
@@ -116,6 +131,8 @@ for x in range(area2, y_max - area2, area):  # X-Werte durchgehen # X Y IHR SEID
         else:
             mask[y - area2:y + area2, x - area2:x + area2] = 255
 
+img_strecke2 = mask.copy()
+img_strecke2 = cv.cvtColor(img_strecke2, cv.COLOR_GRAY2BGR)
 
 # Finde Konturen in der Maske, die nur noch zeigt, wo die Strecke ist:
 _, contours, _ = cv.findContours(mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
@@ -137,6 +154,7 @@ testpoints = 20
 x_step = int(y_max / testpoints)
 y_step = int(x_max / testpoints)
 
+# Startpunkt setzen
 punkt_x = 0
 punkt_y = 0
 
@@ -165,48 +183,56 @@ while (mask[punkt_y, punkt_x] == 0) and (count < 100 or x_step == 1 or y_step ==
 print('Startpunkt: (', punkt_x, '|', punkt_y, ')')
 
 # Markiere Punkt im neuen Streckenbild
-# cv.circle(img_strecke, (punkt_x, punkt_y), 20, (255, 255, 0), 3)
+# cv.circle(img_strecke, (punkt_x, punkt_y), 20, (0, 255, 0), 3)
 
 # Gehe von dem Punkt zum Rand der Maske
-step_x = 1 # nach rechts
-step_y = 0 # nach unten
+step_list_x = (1, 1, 0, -1, -1, -1,  0,  1)
+step_list_y = (0, 1, 1,  1,  0, -1, -1, -1)
 
 # Schritt wie oben definiert machen, bis Rand erreicht / bis erster Schritt außerhalb der Strecke
-(rand1_x, rand1_y) = rand_finden(punkt_x, punkt_y, step_x, step_y)
+raender_x = np.zeros(8, dtype=np.int16)
+raender_y = np.zeros(8, dtype=np.int16)
+# (raender_x[0], raender_y[0]) = rand_finden(punkt_x, punkt_y, step_list_x[0], step_list_y[0])
 
 # Gehe den Rand der Maske entlang, bis der Anfang wieder erreicht ist
-rand_ablaufen(rand1_x, rand1_y, (0, 0, 255))
+counts = np.zeros(8, dtype=np.int16)
+# counts[0] = rand_ablaufen(raender_x[0], raender_y[0], (0, 0, 255))
 
-# Gehe von dem Punkt zum Rand der Maske
-step_x = -1 # nach rechts
-step_y = 0 # nach unten
+# Gehe von dem Punkt zum anderen Rand der Maske
+i = 0
+test_farbe = ((255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0), (255, 0, 255), (0, 255, 255), (255, 255, 255), (0, 0, 0))
+while i < 8:
+    # Schritt wie oben definiert machen, bis Rand erreicht / bis erster Schritt außerhalb der Strecke
+    (raender_x[i], raender_y[i]) = rand_finden(punkt_x, punkt_y, step_list_x[i], step_list_y[i])
 
-# Schritt wie oben definiert machen, bis Rand erreicht / bis erster Schritt außerhalb der Strecke
-(rand2_x, rand2_y) = rand_finden(punkt_x, punkt_y, step_x, step_y)
+    if not(raender_x[i] == 0 and raender_y[i] == 0):
+        # Gehe den Rand der Maske entlang, bis der Anfang wieder erreicht ist
+        counts[i] = rand_ablaufen(raender_x[i], raender_y[i], test_farbe[i])
 
-# Gehe den Rand der Maske entlang, bis der Anfang wieder erreicht ist
-rand_ablaufen(rand2_x, rand2_y, (255, 0, 0))
+    i += 1
+
+print(counts)
 
 # Geraden und Kurven finden
 
 # Kanten glätten (unscharf machen und Mittelwert nehmen)
-img_strecke = cv.blur(img_strecke, (5, 5))
-img_strecke = cv.medianBlur(img_strecke, 7)
+# img_strecke = cv.blur(img_strecke, (5, 5))
+# img_strecke = cv.medianBlur(img_strecke, 7)
 
 img_strecke[:, :] = (img_strecke[:, :] > 0) * 255
 
 step_x = 1
 step_y = 0
-while img_strecke[rand1_y, rand1_x, 2] != 0:
-    rand1_x += step_x
-    rand1_y += step_y
+while img_strecke[raender_y[0], raender_x[0], 2] != 0:
+    raender_x[0] += step_x
+    raender_y[0] += step_y
 
 # Letzten Schritt rückgängig machen, da nun außerhalb der Strecke
-rand1_x -= step_x
-rand1_y -= step_y
+raender_x[0] -= step_x
+raender_y[0] -= step_y
 
-test1_x = rand1_x
-test1_y = rand1_y
+test1_x = raender_x[0]
+test1_y = raender_y[0]
 
 # step_x = -1
 # step_y = 0
@@ -316,12 +342,14 @@ cv.namedWindow("Strecke", cv.WINDOW_NORMAL)
 cv.imshow("Strecke", img_strecke)
 cv.resizeWindow("Strecke", y_max, x_max)
 
+cv.imwrite('C:/Users/David/Desktop/test.jpg', img_strecke)
+cv.imwrite('C:/Users/David/Desktop/test2.jpg', img_strecke2)
+
 
 # Warte auf Tastendruck (sonst sieht man das Fenster nicht)
 key = cv.waitKey(0)
 
 # Schließe alle Fenster
 cv.destroyAllWindows()
-
 
 
