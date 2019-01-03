@@ -17,22 +17,22 @@ def kanten_glaetten(kanten_array, pixel_count, farbe, step_size=19):
     start_y = kanten_array[0, 1]
 
     # In einer Schleife die Kantenpunkte mit bestimmter Schrittweite ablaufen
-    for index in range(step_size, pixel_count - step_size, step_size):
-        diff_step_x = (kanten_array[index, 0] - start_x) / step_size
-        diff_step_y = (kanten_array[index, 1] - start_y) / step_size
+    for a in range(step_size, pixel_count - step_size, step_size):
+        diff_step_x = (kanten_array[a, 0] - start_x) / step_size
+        diff_step_y = (kanten_array[a, 1] - start_y) / step_size
 
         # Zwischen den Kantenpunkten interpolieren (Linie glaetten) und diese Linie zeichnen
-        for j in range(index - step_size, index - 1):
-            img_strecke[kanten_array[j, 1], kanten_array[j, 0]] = (0, 0, 0)  # Alter Punkt auf dem Bild löschen
-            kanten_array[j, 0] = start_x + (j - index + step_size) * diff_step_x  # Neuen Kantenpunkt (X) berechnen
-            kanten_array[j, 1] = start_y + (j - index + step_size) * diff_step_y  # Neuen Kantenpunkt (Y) berechnen
-            img_strecke[kanten_array[j, 1], kanten_array[j, 0]] = farbe  # Neuen Punkt in uebergebener Farbe zeichnen
+        for b in range(a - step_size, a - 1):
+            img_strecke[kanten_array[b, 1], kanten_array[b, 0]] = (0, 0, 0)  # Bisheriger Kantenpunkt schwarz machen
+            kanten_array[b, 0] = start_x + (b - a + step_size) * diff_step_x  # Neuen Kantenpunkt (X) berechnen
+            kanten_array[b, 1] = start_y + (b - a + step_size) * diff_step_y  # Neuen Kantenpunkt (Y) berechnen
+            img_strecke[kanten_array[b, 1], kanten_array[b, 0]] = farbe  # Neuen Punkt in uebergebener Farbe zeichnen
 
         # Startpunkt fuer naechsten Schleifendurchlauf speichern
-        start_x = kanten_array[index, 0]
-        start_y = kanten_array[index, 1]
+        start_x = kanten_array[a, 0]
+        start_y = kanten_array[a, 1]
 
-    return kanten_array  # Neuer Array mit Kantenpunkten zurueckgeben
+    return kanten_array  # Neuen Array mit Kantenpunkten zurueckgeben
 
 
 # Rand der Maske finden
@@ -140,13 +140,7 @@ def rand_ablaufen(kante_x, kante_y, farbe):
 # CODE START                #
 #############################
 
-
-# Definiere Farb-Ranges
-lower_value = 0    # Untere Wertschwelle fuer Streckenerkennung (Ganz Schwarz)
-upper_value = 110  # Obere Wertschelle (Dunkles Grau)
-lower_color = (lower_value, lower_value, lower_value)
-upper_color = (upper_value, upper_value, upper_value)
-
+# 1. Bild lesen und bearbeiten
 
 # Lese Bild von Festplatte
 # img = cv.imread('D:/samir/Dokumente/Studium/DHBW/Semester_5/Studienarbeit/Quellcode/Images/Oval3_7.jpg')
@@ -174,6 +168,14 @@ y_max = len(frame[:, 0])  # Breite des Bilds
 x_max = len(frame[0, :])  # Hoehe des Bilds
 
 
+# 2. Maske erstellen und verbessern
+
+# Definiere Farb-Ranges
+lower_value = 0    # Untere Wertschwelle fuer Streckenerkennung (Ganz Schwarz)
+upper_value = 110  # Obere Wertschelle (Dunkles Grau)
+lower_color = (lower_value, lower_value, lower_value)
+upper_color = (upper_value, upper_value, upper_value)
+
 # Filtere Bild nach Farbgrenzen
 mask = cv.inRange(frame, lower_color, upper_color)
 
@@ -185,37 +187,41 @@ area_y = 10
 area2_x = int(area_x / 2)  # Hälfte des Bereichs bestimmen (fuer X und Y)
 area2_y = int(area_y / 2)
 
-# Bild durchsuchen
+# Schwellwerte in der Maske überprüfen
 for x in range(area2_x, x_max - area2_x, area_x):  # X-Werte durchgehen
     for y in range(area2_y, y_max - area2_y, area_x):   # Y-Werte durchgehen
         # Area of Interest aus kopierter Maske herauskopieren
         copy = (mask2[y - area2_y:y + area2_y, x - area2_x:x + area2_x])
         summe = sum(sum(copy))  # Summe der weissen Pixel in dem Bereich berechnen
         if summe <= 5*250:  # Anzahl der Pixel auf Schwellwert ueberpruefen
-            # Wenn zu wenig Pixel in diesem Bereich Weiss sind, dann wird der gesamte Bereich in der Kopie
-            # auf Null gesetzt
+            # Wenn zu wenig Pixel in diesem Bereich Weiss sind, dann wird der Bereich in der Maske
+            # auf Null (Schwarz) gesetzt
             mask[y - area2_y:y + area2_y, x - area2_x:x + area2_x] = 0
-        else:
+        else:  # Sonst wird der Bereich auf Weiss gesetzt
             mask[y - area2_y:y + area2_y, x - area2_x:x + area2_x] = 255
 
 
-# Kopie der Maske erstellen und zu Farbbild konvertieren
+# Kopie der neuen, bearbeiteten Maske erstellen und zu Farbbild konvertieren
 img_debug = mask.copy()
 img_debug = cv.cvtColor(img_debug, cv.COLOR_GRAY2BGR)
 
 
-# Finde Konturen in der Maske, die nur noch zeigt, wo die Strecke ist:
-_, contours, _ = cv.findContours(mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+# X. Konturen suchen (unwichtig)
 
-# Suche die groesste Kontur heraus (diese ist hoechst wahrscheinlich die Strecke)
-# Nehme dazu die Flaeche der Kontur und ueberpruefe, ob die groesser als Null ist
-if len(contours) > 0:
-    strecke = max(contours, key=cv.contourArea)
+# # Finde Konturen in der Maske, die nur noch zeigt, wo die Strecke ist:
+# _, contours, _ = cv.findContours(mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+#
+# # Suche die groesste Kontur heraus (diese ist hoechst wahrscheinlich die Strecke)
+# # Nehme dazu die Flaeche der Kontur und ueberpruefe, ob die groesser als Null ist
+# if len(contours) > 0:
+#     strecke = max(contours, key=cv.contourArea)
+#
+#     # Zeichne ein Rechteck um die Strecke in das Bild ein:
+#     x, y, w, h = cv.boundingRect(strecke)
+#     cv.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), thickness=30)
 
-    # Zeichne ein Rechteck um die Strecke in das Bild ein:
-    x, y, w, h = cv.boundingRect(strecke)
-    cv.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), thickness=30)
 
+# 3. Punkt der Strecke in Maske suchen
 
 # Neues leeres (schwarzes) Bild erstellen
 img_strecke = np.zeros((y_max, x_max, 3), np.uint8)
@@ -259,6 +265,10 @@ print('Startpunkt: (', punkt_x, '|', punkt_y, ')')
 cv.circle(img_debug, (punkt_x, punkt_y), 20, (0, 255, 0), 3)
 
 
+# 4. Streckenraender suchen und Kanten ablaufen
+# 4.1 Rand finden
+# 4.2 Kante ablaufen
+
 # Von dem gefundenen Startpunkt auf der Strecke in verschiedenen Richtungen (insgesamt 8 Richtungen) den Rand der Maske
 # suchen und von dort die Kanten ablaufen
 
@@ -295,13 +305,15 @@ while i < 8:
 print('Kantenlaengen:', counts)
 
 
+# 5. Innen- und Aussenkante aus allen Kanten finden, farbig markieren und Daten speichern
+
 # Aussen (Laengste Kante) und Innen (Zweitlaengste Kante) der Strecke herausfinden
 sorted_array = sorted(counts, reverse=True)  # Array nach Groesse abfallend sortieren
-# Die erste Position ist die laengste Kante --> Das ist wahrscheinlich die aeussere Kante
-# Die zweite Positon ist die zweitlaengste Kante --> Im Normalfall die innere Kante
+# Die erste Position ist die laengste Kante --> Das ist die aeussere Kante
+# Die zweite Positon ist die zweitlaengste Kante --> Die innere Kante
 # Die anderen Postionen sind kleiner und deswegen nicht weiter relevant
 
-# Aeussere Kante im orginalen Array suchen und Indexposition speichern
+# Aeussere Kante im originalen Array suchen und Indexposition speichern
 pos_aussen = 0
 while sorted_array[0] != counts[pos_aussen]:
     pos_aussen += 1
@@ -320,7 +332,7 @@ rand_aussen_x = raender_x[pos_aussen]
 rand_aussen_y = raender_y[pos_aussen]
 count_aussen, kante_aussen = rand_ablaufen(rand_aussen_x, rand_aussen_y, (0, 0, 255))
 
-# print(kante_aussen)
+# print(kante_aussen)  # Alle Kantenpunkte anzeigen
 
 # Innenkante Blau markieren und Daten umspeichern
 rand_innen_x = raender_x[pos_innen]
@@ -331,7 +343,7 @@ count_innen, kante_innen = rand_ablaufen(rand_innen_x, rand_innen_y, (255, 0, 0)
 print('Laenge Aussenkante:', count_aussen)
 print('Laenge Innenkante:', count_innen)
 
-# Geraden und Kurven finden
+# 6. Kanten glaetten und Bild aufhellen
 
 # Kanten glaetten (unscharf machen und Mittelwert nehmen)
 # img_strecke = cv.blur(img_strecke, (5, 5))
@@ -347,17 +359,17 @@ kante_aussen = kanten_glaetten(kante_aussen, count_aussen, (0, 0, 255))
 img_strecke[:, :] = (img_strecke[:, :] > 0) * 255
 
 
-# TODO: Code optimieren und Schleife mitnutzen
-stp = 50
+# 7. Richtung zwischen Innen- und Aussenkante herausfinden
+
+stp = 50  # Schrittweite
 
 # Richtung fuer kuerzeste Distanz herausfinden
-# TODO: i definieren oder auf festen Wert setzen
-punkt_a_x = kante_innen[i, 0]
-punkt_a_y = kante_innen[i, 1]
+punkt_a_x = kante_innen[0, 0]
+punkt_a_y = kante_innen[0, 1]
 
 # Bestimme Anzahl an Pixeln Rand ablaufen
-punkt_b_x = kante_innen[i + stp, 0]
-punkt_b_y = kante_innen[i + stp, 1]
+punkt_b_x = kante_innen[stp, 0]
+punkt_b_y = kante_innen[stp, 1]
 
 # Berechne Vektor zwischen den beiden Punkten
 diff_x = punkt_a_x - punkt_b_x
@@ -366,40 +378,37 @@ diff_y = punkt_a_y - punkt_b_y
 laenge = np.sqrt(diff_x * diff_x + diff_y * diff_y)
 # print(laenge)
 
-# Orthogonalen Einheitsvektor berechnen
-vektor_x = -1 / laenge * diff_y
-vektor_y = 1 / laenge * diff_x
+abstaende = []  # Leere Liste mit den Laengen anlegen
 
-# Laenge zum Aussenrand berechnen (in eine Richtung)
-i2 = 1
-test_x = 1
-test_y = 1
-while (img_strecke[test_y - 1:test_y + 1, test_x - 1: test_x + 1, 2] == 0).all():
-    test_x = int(punkt_a_x + i2 * vektor_x)
-    test_y = int(punkt_a_y + i2 * vektor_y)
-    img_strecke[int(punkt_a_y + i2 * vektor_y), int(punkt_a_x + i2 * vektor_x), 1] = 255
-    i2 += 1
+for richtung in range(-1, 1, 2):
+    # Orthogonalen Einheitsvektor berechnen (jeweils in eine andere Richtung)
+    vektor_x = richtung / laenge * diff_y
+    vektor_y = -richtung / laenge * diff_x
 
-# Orthogonalen Einheitsvektor berechnen (Minus wo anders)
-vektor_x = 1 / laenge * diff_y
-vektor_y = -1 / laenge * diff_x
-i3 = 1
-test_x = 1
-test_y = 1
-while (img_strecke[test_y - 1:test_y + 1, test_x - 1: test_x + 1, 2] == 0).all():
-    test_x = int(punkt_a_x + i3 * vektor_x)
-    test_y = int(punkt_a_y + i3 * vektor_y)
-    img_strecke[int(punkt_a_y + i2 * vektor_y), int(punkt_a_x + i2 * vektor_x), 1] = 255
-    i3 += 1
+    # Abstand zum Aussenrand / Aussenkante berechnen
+    abstand = 1  # Abstand auf 1 Pixel setzen
+    test_x = 1  # Testpunkt auf linken oberen Rand setzen (sollte ausserhalb der Strecke sein)
+    test_y = 1
+    while (img_strecke[test_y - 1:test_y + 1, test_x - 1: test_x + 1, 2] == 0).all():
+        test_x = int(punkt_a_x + abstand * vektor_x)  # Neuen Testpunkt (X) berechnen
+        test_y = int(punkt_a_y + abstand * vektor_y)  # Neuen Testpunkt (Y) berechnen
+        abstand += 1  # Ein Pixel zum Abstand hochzaehlen
 
+    abstaende.append(abstand)  # Abstand dem Array hinzufuegen
 
-if i2 > i3:
-    direction = -1
+# Kuerzester Abstand herausfinden
+if abstaende[0] > abstaende[1]:
+    richtung = -1
 else:
-    direction = 1
+    richtung = 1
 
-distanz_array = np.zeros(int((count_innen - stp) / stp + 1), dtype=np.int16)
 
+# 8. Abstaende zwischen Innen- und Aussenkante auf gesamter Strecke herausfinden und speichern
+
+# Array fuer Abstaende anlegen
+abstaende = np.zeros(int((count_innen - stp) / stp + 1), dtype=np.int16)
+
+# Gesamte Strecke ablaufen
 for i in range(0, count_innen - stp, stp):
     # Randpunkt innen auswaehlen
     punkt_a_x = kante_innen[i, 0]
@@ -418,29 +427,32 @@ for i in range(0, count_innen - stp, stp):
     # print(laenge)
 
     # Orthogonalen Einheitsvektor berechnen (mit vorher berechneter Richtung)
-    vektor_x = -direction / laenge * diff_y
-    vektor_y = direction / laenge * diff_x
+    vektor_x = -richtung / laenge * diff_y
+    vektor_y = richtung / laenge * diff_x
 
     # Laenge zum Aussenrand berechnen (in richtige Richtung)
-    distanz = 1
-    test_x = 1
+    abstand = 1  # Abstand auf 1 Pixel setzen
+    test_x = 1  # Testpunkt auf linken oberen Rand setzen (sollte ausserhalb der Strecke sein)
     test_y = 1
     while (img_strecke[test_y - 1:test_y + 1, test_x - 1: test_x + 1, 2] == 0).all():
-        test_x = int(punkt_a_x + distanz * vektor_x)
-        test_y = int(punkt_a_y + distanz * vektor_y)
-        img_strecke[int(punkt_a_y + distanz * vektor_y), int(punkt_a_x + distanz * vektor_x), 1] = 255
-        distanz += 1
+        test_x = int(punkt_a_x + abstand * vektor_x)  # Neuen Testpunkt (X) berechnen
+        test_y = int(punkt_a_y + abstand * vektor_y)  # Neuen Testpunkt (Y) berechnen
+        # Punkt auf Bild gruen markieren
+        img_strecke[int(punkt_a_y + abstand * vektor_y), int(punkt_a_x + abstand * vektor_x), 1] = 255
+        abstand += 1  # Ein Pixel zum Abstand hochzaehlen
 
     # print(distanz)  # Distanz ausgeben
-    distanz_array[int(i / stp)] = distanz  # Distanz in Array speichern
-    img_strecke[int(punkt_a_y + distanz * vektor_y), int(punkt_a_x + distanz * vektor_x), 1] = 255
+    abstaende[int(i / stp)] = abstand  # Abstand in Array speichern
+    img_strecke[int(punkt_a_y + abstand * vektor_y), int(punkt_a_x + abstand * vektor_x), 1] = 255
 
 # Alle Laengen ausgeben
-print('Streckenbreiten: ', distanz_array)
+print('Streckenbreiten: ', abstaende)
+
 
 # TODO !!
 
 
+# 9. Bilder anzeigen und speichern
 
 # Zeige Bilder an
 # Zeige Originalbild an
@@ -473,5 +485,3 @@ key = cv.waitKey(0)
 
 # Schliesse alle Fenster
 cv.destroyAllWindows()
-
-
