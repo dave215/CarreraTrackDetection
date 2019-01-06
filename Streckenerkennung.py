@@ -184,10 +184,10 @@ mask2 = mask.copy()  # Kopie der Maske erstellen
 # Groesse des Durchsuch-Bereichs festlegen: Hier: 10x10
 area_x = 10
 area_y = 10
-area2_x = int(area_x / 2)  # Hälfte des Bereichs bestimmen (fuer X und Y)
+area2_x = int(area_x / 2)  # Haelfte des Bereichs bestimmen (fuer X und Y)
 area2_y = int(area_y / 2)
 
-# Schwellwerte in der Maske überprüfen
+# Schwellwerte in der Maske ueberpruefen
 for x in range(area2_x, x_max - area2_x, area_x):  # X-Werte durchgehen
     for y in range(area2_y, y_max - area2_y, area_x):   # Y-Werte durchgehen
         # Area of Interest aus kopierter Maske herauskopieren
