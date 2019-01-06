@@ -88,8 +88,8 @@ def rand_ablaufen(kante_x, kante_y, farbe):
         # In Schleife alle 9 moeglichen Kanten ueberpruefen
         for index in range(1, 9):
             # Punkte rund um aktuellen Randpunkt anschauen und Farbdifferenz betrachten
-            new_x = kante_x + test_list_x[index]  # Koordianten des zu ueberpruefendnen x-Punktes zwischenspeichern
-            new_y = kante_y + test_list_y[index]  # y-Punkt zwischenspeichern
+            new_x = kante_x + test_list_x[index]  # Koordinaten des zu ueberpruefendnen x-Punktes zwischenspeichern
+            new_y = kante_y + test_list_y[index]  # Koordinaten des zu ueberpruefendnen y-Punktes zwischenspeichern
             diff = abs(int(last_color) - int(mask[new_y, new_x]))  # Farbwertdifferenz (Betrag) speichern
 
             # Wenn Differenz groesser als 100 (also neuer Punkt im anderen Bereich) und Kante dort noch nicht gefunden
@@ -380,7 +380,7 @@ laenge = np.sqrt(diff_x * diff_x + diff_y * diff_y)
 
 abstaende = []  # Leere Liste mit den Laengen anlegen
 
-for richtung in range(-1, 1, 2):
+for richtung in range(-1, 3, 2):
     # Orthogonalen Einheitsvektor berechnen (jeweils in eine andere Richtung)
     vektor_x = richtung / laenge * diff_y
     vektor_y = -richtung / laenge * diff_x
@@ -395,6 +395,7 @@ for richtung in range(-1, 1, 2):
         abstand += 1  # Ein Pixel zum Abstand hochzaehlen
 
     abstaende.append(abstand)  # Abstand dem Array hinzufuegen
+
 
 # Kuerzester Abstand herausfinden
 if abstaende[0] > abstaende[1]:
