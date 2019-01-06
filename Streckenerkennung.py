@@ -4,12 +4,12 @@ import numpy as np  # NumPy
 
 
 #############################
-# FUNCTIONS                 #
+# FUNKTIONEN                #
 #############################
 
 
-# Funktion glaettet die Kanten im Bild (uebergegebener Array mit Koordinaten), indem zwischen 2 Punkten mit
-# einstellbaren Abstand eine Linie gezeichnet (interpoliert) wird.
+# Funktion glaettet die Kanten im Bild (uebergebener Array mit Koordinaten), indem zwischen
+# zwei Punkten mit einstellbarem Abstand eine Linie gezeichnet (interpoliert) wird.
 # Zurueckgegeben wird der neue "geglaettete" Array mit neuen Kantenpunkten
 def kanten_glaetten(kanten_array, pixel_count, farbe, step_size=19):
     # Startpunkt aus Array holen
@@ -23,7 +23,7 @@ def kanten_glaetten(kanten_array, pixel_count, farbe, step_size=19):
 
         # Zwischen den Kantenpunkten interpolieren (Linie glaetten) und diese Linie zeichnen
         for b in range(a - step_size, a - 1):
-            img_strecke[kanten_array[b, 1], kanten_array[b, 0]] = (0, 0, 0)  # Bisheriger Kantenpunkt schwarz machen
+            img_strecke[kanten_array[b, 1], kanten_array[b, 0]] = (0, 0, 0)  # Bisherigen Kantenpunkt schwarz machen
             kanten_array[b, 0] = start_x + (b - a + step_size) * diff_step_x  # Neuen Kantenpunkt (X) berechnen
             kanten_array[b, 1] = start_y + (b - a + step_size) * diff_step_y  # Neuen Kantenpunkt (Y) berechnen
             img_strecke[kanten_array[b, 1], kanten_array[b, 0]] = farbe  # Neuen Punkt in uebergebener Farbe zeichnen
@@ -343,6 +343,7 @@ count_innen, kante_innen = rand_ablaufen(rand_innen_x, rand_innen_y, (255, 0, 0)
 print('Laenge Aussenkante:', count_aussen)
 print('Laenge Innenkante:', count_innen)
 
+
 # 6. Kanten glaetten und Bild aufhellen
 
 # Kanten glaetten (unscharf machen und Mittelwert nehmen)
@@ -380,6 +381,7 @@ laenge = np.sqrt(diff_x * diff_x + diff_y * diff_y)
 
 abstaende = []  # Leere Liste mit den Laengen anlegen
 
+# Test der Richtungen -1 und 1
 for richtung in range(-1, 3, 2):
     # Orthogonalen Einheitsvektor berechnen (jeweils in eine andere Richtung)
     vektor_x = richtung / laenge * diff_y
