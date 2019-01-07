@@ -7,30 +7,48 @@ import numpy as np  # NumPy
 # FUNKTIONEN                #
 #############################
 
+area_x = 26
+area_y = 26
 
 # Funktion glaettet die Kanten im Bild (uebergebener Array mit Koordinaten), indem zwischen
 # zwei Punkten mit einstellbarem Abstand eine Linie gezeichnet (interpoliert) wird.
 # Zurueckgegeben wird der neue "geglaettete" Array mit neuen Kantenpunkten
-def kanten_glaetten(kanten_array, pixel_count, farbe, step_size=19):
+def kanten_glaetten(kanten_array, pixel_count, farbe, step_size=50):
+
     # Startpunkt aus Array holen
     start_x = kanten_array[0, 0]
     start_y = kanten_array[0, 1]
+
+
+    for a in range(0, pixel_count, 1):
+        x = kanten_array[a, 0]
+        y = kanten_array[a, 1]
+        img_strecke[y-5:y+5, x-5:x+5] = (0, 0, 0)
+
+    cv.line(img_strecke, (kanten_array[0, 0], kanten_array[0, 1]), (kanten_array[pixel_count - step_size, 0], kanten_array[pixel_count - step_size, 1]), (0, 0, 0), 10)
+    # cv.circle(img_strecke, (start_x, start_y), 20, (255, 255, 0), 3)
 
     # In einer Schleife die Kantenpunkte mit bestimmter Schrittweite ablaufen
     for a in range(step_size, pixel_count - step_size, step_size):
         diff_step_x = (kanten_array[a, 0] - start_x) / step_size
         diff_step_y = (kanten_array[a, 1] - start_y) / step_size
+        # cv.line(img_strecke, (start_x, start_y), (kanten_array[a-1, 0], kanten_array[a-1, 1]), (0, 0, 0), 5)
 
         # Zwischen den Kantenpunkten interpolieren (Linie glaetten) und diese Linie zeichnen
         for b in range(a - step_size, a - 1):
-            img_strecke[kanten_array[b, 1], kanten_array[b, 0]] = (0, 0, 0)  # Bisherigen Kantenpunkt schwarz machen
+            # img_strecke[kanten_array[b, 1], kanten_array[b, 0]] = (0, 0, 0)  # Bisherigen Kantenpunkt schwarz machen
             kanten_array[b, 0] = start_x + (b - a + step_size) * diff_step_x  # Neuen Kantenpunkt (X) berechnen
             kanten_array[b, 1] = start_y + (b - a + step_size) * diff_step_y  # Neuen Kantenpunkt (Y) berechnen
-            img_strecke[kanten_array[b, 1], kanten_array[b, 0]] = farbe  # Neuen Punkt in uebergebener Farbe zeichnen
+            # img_strecke[kanten_array[b, 1], kanten_array[b, 0]] = farbe  # Neuen Punkt in uebergebener Farbe zeichnen
 
+        cv.line(img_strecke, (start_x, start_y), (kanten_array[a, 0], kanten_array[a, 1]), farbe)
         # Startpunkt fuer naechsten Schleifendurchlauf speichern
         start_x = kanten_array[a, 0]
         start_y = kanten_array[a, 1]
+
+    cv.line(img_strecke, (kanten_array[0, 0], kanten_array[0, 1]), (kanten_array[a, 0], kanten_array[a, 1]), farbe)
+
+    # cv.circle(img_strecke, (kanten_array[0, 0], kanten_array[0, 1]), 20, (255, 0, 255), 2)
 
     return kanten_array  # Neuen Array mit Kantenpunkten zurueckgeben
 
@@ -79,7 +97,7 @@ def rand_ablaufen(kante_x, kante_y, farbe):
     kanten_array[0, 1] = kante_y
 
     # Stoppen, falls "verlaufen"
-    while pixel_count < 10000:
+    while pixel_count < 9999:
         pixel_count += 1  # Zaehlvariable um eins erhoehen
 
         # Zuerst nach Farbe links oben schauen und zwischenspeichern
@@ -143,15 +161,15 @@ def rand_ablaufen(kante_x, kante_y, farbe):
 # 1. Bild lesen und bearbeiten
 
 # Lese Bild von Festplatte
-# img = cv.imread('D:/samir/Dokumente/Studium/DHBW/Semester_5/Studienarbeit/Quellcode/Images/Oval3_7.jpg')
-img = cv.imread('C:/Users/David/Documents/Studium/_Semester 5/Studienarbeit/Streckenbilder/OvaleStrecken/Oval3_7.jpg')
+img = cv.imread('D:/samir/Dokumente/Studium/DHBW/Semester_5/Studienarbeit/Quellcode/Images/Oval3_4.jpg')
+# img = cv.imread('C:/Users/David/Documents/Studium/_Semester 5/Studienarbeit/Streckenbilder/OvaleStrecken/Oval3_7.jpg')
 
 
 # Erstelle eine Kopie vom Bild
 frame = img.copy()
 
 # Bild auf bestimmte Groesse skalieren (verkleinern)
-scale = 0.3
+scale = 0.5
 frame = cv.resize(frame, (0, 0), fx=scale, fy=scale)
 
 
@@ -172,7 +190,7 @@ x_max = len(frame[0, :])  # Hoehe des Bilds
 
 # Definiere Farb-Ranges
 lower_value = 0    # Untere Wertschwelle fuer Streckenerkennung (Ganz Schwarz)
-upper_value = 110  # Obere Wertschelle (Dunkles Grau)
+upper_value = 65  # Obere Wertschelle (Dunkles Grau)
 lower_color = (lower_value, lower_value, lower_value)
 upper_color = (upper_value, upper_value, upper_value)
 
@@ -182,8 +200,8 @@ mask = cv.inRange(frame, lower_color, upper_color)
 # Kleine Bereiche aus der Maske entfernen
 mask2 = mask.copy()  # Kopie der Maske erstellen
 # Groesse des Durchsuch-Bereichs festlegen: Hier: 10x10
-area_x = 10
-area_y = 10
+# area_x = 30
+# area_y = 30
 area2_x = int(area_x / 2)  # Haelfte des Bereichs bestimmen (fuer X und Y)
 area2_y = int(area_y / 2)
 
@@ -193,7 +211,7 @@ for x in range(area2_x, x_max - area2_x, area_x):  # X-Werte durchgehen
         # Area of Interest aus kopierter Maske herauskopieren
         copy = (mask2[y - area2_y:y + area2_y, x - area2_x:x + area2_x])
         summe = sum(sum(copy))  # Summe der weissen Pixel in dem Bereich berechnen
-        if summe <= 5*250:  # Anzahl der Pixel auf Schwellwert ueberpruefen
+        if summe <= area2_x*250:  # Anzahl der Pixel auf Schwellwert ueberpruefen
             # Wenn zu wenig Pixel in diesem Bereich Weiss sind, dann wird der Bereich in der Maske
             # auf Null (Schwarz) gesetzt
             mask[y - area2_y:y + area2_y, x - area2_x:x + area2_x] = 0
@@ -351,10 +369,10 @@ print('Laenge Innenkante:', count_innen)
 # img_strecke = cv.medianBlur(img_strecke, 7)
 
 kante_innen = kanten_glaetten(kante_innen, count_innen, (255, 0, 0))
-# kante_innen = kanten_glaetten(kante_innen, count_innen, (255, 0, 0), 10)
+kante_innen = kanten_glaetten(kante_innen, count_innen, (255, 0, 0), 100)
 
 kante_aussen = kanten_glaetten(kante_aussen, count_aussen, (0, 0, 255))
-# kante_aussen = kanten_glaetten(kante_aussen, count_aussen, (0, 0, 255), 13)
+kante_aussen = kanten_glaetten(kante_aussen, count_aussen, (0, 0, 255), 100)
 
 # Bild aufhellen
 img_strecke[:, :] = (img_strecke[:, :] > 0) * 255
@@ -369,8 +387,8 @@ punkt_a_x = kante_innen[0, 0]
 punkt_a_y = kante_innen[0, 1]
 
 # Bestimme Anzahl an Pixeln Rand ablaufen
-punkt_b_x = kante_innen[stp, 0]
-punkt_b_y = kante_innen[stp, 1]
+punkt_b_x = kante_innen[2*stp, 0]
+punkt_b_y = kante_innen[2*stp, 1]
 
 # Berechne Vektor zwischen den beiden Punkten
 diff_x = punkt_a_x - punkt_b_x
@@ -412,10 +430,10 @@ else:
 abstaende = np.zeros(int((count_innen - stp) / stp + 1), dtype=np.int16)
 
 # Gesamte Strecke ablaufen
-for i in range(0, count_innen - stp, stp):
+for i in range(stp, count_innen - stp, stp):
     # Randpunkt innen auswaehlen
-    punkt_a_x = kante_innen[i, 0]
-    punkt_a_y = kante_innen[i, 1]
+    punkt_a_x = kante_innen[i - stp, 0]
+    punkt_a_y = kante_innen[i - stp, 1]
 
     # Bestimme Anzahl an Pixeln Rand ablaufen
     punkt_b_x = kante_innen[i + stp, 0]
@@ -438,15 +456,36 @@ for i in range(0, count_innen - stp, stp):
     test_x = 1  # Testpunkt auf linken oberen Rand setzen (sollte ausserhalb der Strecke sein)
     test_y = 1
     while (img_strecke[test_y - 1:test_y + 1, test_x - 1: test_x + 1, 2] == 0).all():
-        test_x = int(punkt_a_x + abstand * vektor_x)  # Neuen Testpunkt (X) berechnen
-        test_y = int(punkt_a_y + abstand * vektor_y)  # Neuen Testpunkt (Y) berechnen
+        test2_x = test_x
+        test2_y = test_y
+        test_x = int(kante_innen[i, 0] + abstand * vektor_x)  # Neuen Testpunkt (X) berechnen
+        test_y = int(kante_innen[i, 1] + abstand * vektor_y)  # Neuen Testpunkt (Y) berechnen
         # Punkt auf Bild gruen markieren
-        img_strecke[int(punkt_a_y + abstand * vektor_y), int(punkt_a_x + abstand * vektor_x), 1] = 255
+        if (test2_x != test_x) or (test2_y != test_y):
+            if (abs(test_x) < x_max) and (abs(test_y) < y_max):
+                if (img_strecke[test_y, test_x, 1] != 255):
+                    # print(test_x, test_y)
+                    img_strecke[test_y, test_x, 1] = 255
+                else:
+                    abstand = -1
+                    break
+            else:
+                break
         abstand += 1  # Ein Pixel zum Abstand hochzaehlen
+
 
     # print(distanz)  # Distanz ausgeben
     abstaende[int(i / stp)] = abstand  # Abstand in Array speichern
-    img_strecke[int(punkt_a_y + abstand * vektor_y), int(punkt_a_x + abstand * vektor_x), 1] = 255
+    # img_strecke[int(punkt_a_y + abstand * vektor_y), int(punkt_a_x + abstand * vektor_x), 1] = 255
+    a = int(i / stp)
+
+i = 0
+while i <= a:
+    if abstaende[i] == -1:
+        abstaende = np.delete(abstaende, i)
+        a -= 1
+        i -= 1
+    i += 1
 
 # Alle Laengen ausgeben
 print('Streckenbreiten: ', abstaende)
@@ -457,21 +496,22 @@ print('Streckenbreiten: ', abstaende)
 
 # 9. Bilder anzeigen und speichern
 
+
 # Zeige Bilder an
 # Zeige Originalbild an
 cv.namedWindow('Image', cv.WINDOW_NORMAL)
 cv.imshow('Image', img)
-cv.resizeWindow('Image', 300, 400)
+cv.resizeWindow('Image', int(x_max*scale), int(y_max*scale))
 
 # Zeige die Maske an
 cv.namedWindow('Mask', cv.WINDOW_NORMAL)
 cv.imshow('Mask', mask)
-cv.resizeWindow('Mask', 300, 400)
+cv.resizeWindow('Mask', int(x_max*scale), int(y_max*scale))
 
 # Zeige das Bild mit der markierten Strecke an
 cv.namedWindow('Frame', cv.WINDOW_NORMAL)
 cv.imshow('Frame', frame)
-cv.resizeWindow('Frame', 300, 400)
+cv.resizeWindow('Frame', int(x_max*scale), int(y_max*scale))
 
 # Zeige das Bild mit dem selbstgezeichneten Streckenverlauf an
 cv.namedWindow('Strecke', cv.WINDOW_NORMAL)
@@ -479,8 +519,8 @@ cv.imshow('Strecke', img_strecke)
 cv.resizeWindow('Strecke', x_max, y_max)
 
 # Speichere Bilder als Datei
-cv.imwrite('C:/Users/David/Desktop/test.jpg', img_strecke)
-cv.imwrite('C:/Users/David/Desktop/test2.jpg', img_debug)
+cv.imwrite('C:/Users/samir/Desktop/test.jpg', img_strecke)
+cv.imwrite('C:/Users/samir/Desktop/test2.jpg', img_debug)
 
 
 # Warte auf Tastendruck (sonst sieht man die Fenster nicht)
