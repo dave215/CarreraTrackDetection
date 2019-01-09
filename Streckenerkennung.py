@@ -7,8 +7,6 @@ import numpy as np  # NumPy
 # FUNKTIONEN                #
 #############################
 
-area_x = 26
-area_y = 26
 
 # Funktion glaettet die Kanten im Bild (uebergebener Array mit Koordinaten), indem zwischen
 # zwei Punkten mit einstellbarem Abstand eine Linie gezeichnet (interpoliert) wird.
@@ -19,14 +17,16 @@ def kanten_glaetten(kanten_array, pixel_count, farbe, step_size=50):
     start_x = kanten_array[0, 0]
     start_y = kanten_array[0, 1]
 
-
+    # Alte Kante mit schwarz uebermalen
     for a in range(0, pixel_count, 1):
         x = kanten_array[a, 0]
         y = kanten_array[a, 1]
-        img_strecke[y-5:y+5, x-5:x+5] = (0, 0, 0)
+        img_strecke[y - 5:y + 5, x - 5:x + 5] = (0, 0, 0)
 
-    cv.line(img_strecke, (kanten_array[0, 0], kanten_array[0, 1]), (kanten_array[pixel_count - step_size, 0], kanten_array[pixel_count - step_size, 1]), (0, 0, 0), 10)
-    # cv.circle(img_strecke, (start_x, start_y), 20, (255, 255, 0), 3)
+    cv.line(img_strecke, (kanten_array[0, 0], kanten_array[0, 1]),
+            (kanten_array[pixel_count - step_size, 0], kanten_array[pixel_count - step_size, 1]), (0, 0, 0), 10)
+
+    # cv.circle(img_strecke, (start_x, start_y), 20, (255, 255, 0), 3)  # Kreis um Start der Kantenglaettung zeichnen
 
     # In einer Schleife die Kantenpunkte mit bestimmter Schrittweite ablaufen
     for a in range(step_size, pixel_count - step_size, step_size):
@@ -46,9 +46,8 @@ def kanten_glaetten(kanten_array, pixel_count, farbe, step_size=50):
         start_x = kanten_array[a, 0]
         start_y = kanten_array[a, 1]
 
+    # Linie von Startpunkt zum letzten Punkt der Kantenglaettung zeichen --> Umrundung schliessen
     cv.line(img_strecke, (kanten_array[0, 0], kanten_array[0, 1]), (kanten_array[a, 0], kanten_array[a, 1]), farbe)
-
-    # cv.circle(img_strecke, (kanten_array[0, 0], kanten_array[0, 1]), 20, (255, 0, 255), 2)
 
     return kanten_array  # Neuen Array mit Kantenpunkten zurueckgeben
 
@@ -154,6 +153,39 @@ def rand_ablaufen(kante_x, kante_y, farbe):
     return pixel_count, kanten_array
 
 
+# Funktion zum Erstellen der Maske
+def maske_erstellen(orig_img, untere_grenze=0, obere_grenze=80, area_x=26, area_y=26):
+    # Definiere Farb-Ranges
+    lower_color = (untere_grenze, untere_grenze, untere_grenze)
+    upper_color = (obere_grenze, obere_grenze, obere_grenze)
+
+    # Filtere Bild nach Farbgrenzen
+    mask_img = cv.inRange(frame, lower_color, upper_color)
+
+    # Kopie der Maske erstellen
+    mask2 = mask_img.copy()
+
+    # Haelfte des Bereichs bestimmen (fuer X und Y) (nach uebergebenen Werten)
+    area2_x = int(area_x / 2)
+    area2_y = int(area_y / 2)
+
+    # Kleine Bereiche aus der Maske entfernen
+    # Schwellwerte in der Maske ueberpruefen
+    for x in range(area2_x, x_max - area2_x, area_x):  # X-Werte durchgehen
+        for y in range(area2_y, y_max - area2_y, area_x):  # Y-Werte durchgehen
+            # Area of Interest aus kopierter Maske herauskopieren
+            copy = (mask2[y - area2_y:y + area2_y, x - area2_x:x + area2_x])
+            summe = sum(sum(copy))  # Summe der weissen Pixel in dem Bereich berechnen
+            if summe <= area2_x * 250:  # Anzahl der Pixel auf Schwellwert ueberpruefen
+                # Wenn zu wenig Pixel in diesem Bereich Weiss sind, dann wird der Bereich in der Maske
+                # auf Null (Schwarz) gesetzt
+                mask_img[y - area2_y:y + area2_y, x - area2_x:x + area2_x] = 0
+            else:  # Sonst wird der Bereich auf Weiss gesetzt
+                mask_img[y - area2_y:y + area2_y, x - area2_x:x + area2_x] = 255
+
+    return mask_img
+
+
 #############################
 # CODE START                #
 #############################
@@ -161,8 +193,8 @@ def rand_ablaufen(kante_x, kante_y, farbe):
 # 1. Bild lesen und bearbeiten
 
 # Lese Bild von Festplatte
-img = cv.imread('D:/samir/Dokumente/Studium/DHBW/Semester_5/Studienarbeit/Quellcode/Images/Oval3_4.jpg')
-# img = cv.imread('C:/Users/David/Documents/Studium/_Semester 5/Studienarbeit/Streckenbilder/OvaleStrecken/Oval3_7.jpg')
+# img = cv.imread('D:/samir/Dokumente/Studium/DHBW/Semester_5/Studienarbeit/Quellcode/Images/Oval3_4.jpg')
+img = cv.imread('C:/Users/David/Documents/Studium/_Semester 5/Studienarbeit/Streckenbilder/OvaleStrecken/Oval3_4.jpg')
 
 
 # Erstelle eine Kopie vom Bild
@@ -185,39 +217,62 @@ frame = cv.cvtColor(frame, cv.COLOR_HSV2BGR)
 y_max = len(frame[:, 0])  # Breite des Bilds
 x_max = len(frame[0, :])  # Hoehe des Bilds
 
+# Ueberpruefen, ob das Bild im Querformat ist. Wenn nicht, das Bild auf Querformat bringen
+if x_max < y_max:
+    frame = cv.rotate(frame, cv.ROTATE_90_COUNTERCLOCKWISE)  # Bild um 90° drehen
+    # Bildgroessen an Rotation anpassen
+    temp = x_max
+    x_max = y_max
+    y_max = temp
+
 
 # 2. Maske erstellen und verbessern
 
 # Definiere Farb-Ranges
-lower_value = 0    # Untere Wertschwelle fuer Streckenerkennung (Ganz Schwarz)
-upper_value = 65  # Obere Wertschelle (Dunkles Grau)
-lower_color = (lower_value, lower_value, lower_value)
-upper_color = (upper_value, upper_value, upper_value)
+lower_value = 0  # Untere Wertschwelle fuer Streckenerkennung (Ganz Schwarz)
+upper_values = [60, 80, 100, 120]  # Obere Wertschellen (Dunkles Grau) in einer Liste
 
-# Filtere Bild nach Farbgrenzen
-mask = cv.inRange(frame, lower_color, upper_color)
+# Groesse des Durchsuch-Bereichs festlegen: Hier: 26x26
+area_x = 26
+area_y = 26
 
-# Kleine Bereiche aus der Maske entfernen
-mask2 = mask.copy()  # Kopie der Maske erstellen
-# Groesse des Durchsuch-Bereichs festlegen: Hier: 10x10
-# area_x = 30
-# area_y = 30
-area2_x = int(area_x / 2)  # Haelfte des Bereichs bestimmen (fuer X und Y)
-area2_y = int(area_y / 2)
+# Fuer alle angegebenen Oberen Grenzwerte Masken zeichnen und ausgeben
+for i in range(0, len(upper_values)):
+    # Maske in Funktion erstellen
+    mask = maske_erstellen(frame, lower_value, upper_values[i], area_x, area_y)
 
-# Schwellwerte in der Maske ueberpruefen
-for x in range(area2_x, x_max - area2_x, area_x):  # X-Werte durchgehen
-    for y in range(area2_y, y_max - area2_y, area_x):   # Y-Werte durchgehen
-        # Area of Interest aus kopierter Maske herauskopieren
-        copy = (mask2[y - area2_y:y + area2_y, x - area2_x:x + area2_x])
-        summe = sum(sum(copy))  # Summe der weissen Pixel in dem Bereich berechnen
-        if summe <= area2_x*250:  # Anzahl der Pixel auf Schwellwert ueberpruefen
-            # Wenn zu wenig Pixel in diesem Bereich Weiss sind, dann wird der Bereich in der Maske
-            # auf Null (Schwarz) gesetzt
-            mask[y - area2_y:y + area2_y, x - area2_x:x + area2_x] = 0
-        else:  # Sonst wird der Bereich auf Weiss gesetzt
-            mask[y - area2_y:y + area2_y, x - area2_x:x + area2_x] = 255
+    # Zeige die Maske an
+    window_name = 'Mask' + i.__str__()  # Namen des Maskenfensters eine Zahl anhaengen
+    cv.namedWindow(window_name, cv.WINDOW_NORMAL)
+    cv.imshow(window_name, mask)
+    cv.resizeWindow(window_name, int(x_max * scale), int(y_max * scale))
 
+cv.waitKey(0)  # Warten auf Tastendruck
+cv.destroyAllWindows()  # Alle Fenster schliesen
+
+# TODO: Ersetzen durch Auswahl in GUI
+auswahl = 0    # Welches der 4 Bilder sieht am besten aus?
+auswahl_wert = upper_values[auswahl]  # "Bester" Maskenwert zwischenspeichern
+upper_values = [auswahl_wert - 15, auswahl_wert - 10, auswahl_wert - 5, auswahl_wert, auswahl_wert + 5,
+                auswahl_wert + 10, auswahl_wert + 15]  # Neue obere Wertschellen (Dunkles Grau) in einer Liste
+
+# Fuer alle angegebenen Oberen Grenzwerte Masken zeichnen und ausgeben
+for i in range(0, len(upper_values)):
+    # Maske in Funktion erstellen
+    mask = maske_erstellen(frame, lower_value, upper_values[i], area_x, area_y)
+
+    # Zeige die Maske an
+    window_name = 'Mask' + i.__str__()  # Namen des Maskenfensters eine Zahl anhaengen
+    cv.namedWindow(window_name, cv.WINDOW_NORMAL)
+    cv.imshow(window_name, mask)
+    cv.resizeWindow(window_name, int(x_max * scale), int(y_max * scale))
+
+cv.waitKey(0)  # Warten auf Tastendruck
+cv.destroyAllWindows()  # Alle Fenster schliesen
+
+# TODO: Ersetzen durch Auswahl in GUI
+auswahl = 4    # Welches der 7 Bilder sieht am besten aus?
+mask = maske_erstellen(frame, lower_value, upper_values[auswahl], area_x, area_y)  # Maske erstellen
 
 # Kopie der neuen, bearbeiteten Maske erstellen und zu Farbbild konvertieren
 img_debug = mask.copy()
@@ -387,8 +442,8 @@ punkt_a_x = kante_innen[0, 0]
 punkt_a_y = kante_innen[0, 1]
 
 # Bestimme Anzahl an Pixeln Rand ablaufen
-punkt_b_x = kante_innen[2*stp, 0]
-punkt_b_y = kante_innen[2*stp, 1]
+punkt_b_x = kante_innen[2 * stp, 0]
+punkt_b_y = kante_innen[2 * stp, 1]
 
 # Berechne Vektor zwischen den beiden Punkten
 diff_x = punkt_a_x - punkt_b_x
@@ -463,7 +518,7 @@ for i in range(stp, count_innen - stp, stp):
         # Punkt auf Bild gruen markieren
         if (test2_x != test_x) or (test2_y != test_y):
             if (abs(test_x) < x_max) and (abs(test_y) < y_max):
-                if (img_strecke[test_y, test_x, 1] != 255):
+                if img_strecke[test_y, test_x, 1] == 0:
                     # print(test_x, test_y)
                     img_strecke[test_y, test_x, 1] = 255
                 else:
@@ -472,7 +527,6 @@ for i in range(stp, count_innen - stp, stp):
             else:
                 break
         abstand += 1  # Ein Pixel zum Abstand hochzaehlen
-
 
     # print(distanz)  # Distanz ausgeben
     abstaende[int(i / stp)] = abstand  # Abstand in Array speichern
@@ -496,7 +550,6 @@ print('Streckenbreiten: ', abstaende)
 
 # 9. Bilder anzeigen und speichern
 
-
 # Zeige Bilder an
 # Zeige Originalbild an
 cv.namedWindow('Image', cv.WINDOW_NORMAL)
@@ -519,8 +572,10 @@ cv.imshow('Strecke', img_strecke)
 cv.resizeWindow('Strecke', x_max, y_max)
 
 # Speichere Bilder als Datei
-cv.imwrite('C:/Users/samir/Desktop/test.jpg', img_strecke)
-cv.imwrite('C:/Users/samir/Desktop/test2.jpg', img_debug)
+# cv.imwrite('C:/Users/samir/Desktop/test.jpg', img_strecke)
+# cv.imwrite('C:/Users/samir/Desktop/test2.jpg', img_debug)
+cv.imwrite('C:/Users/David/Desktop/test.jpg', img_strecke)
+cv.imwrite('C:/Users/David/Desktop/test2.jpg', img_debug)
 
 
 # Warte auf Tastendruck (sonst sieht man die Fenster nicht)
