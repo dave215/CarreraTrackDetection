@@ -2,6 +2,11 @@
 import cv2 as cv    # OpenCV
 import numpy as np  # NumPy
 
+import sys
+from PyQt5.QtWidgets import QApplication, QDialog, QMainWindow
+from Modellbahnerkennung import *
+from GrobeMaske import *
+from GenaueMaske import *
 
 #############################
 # FUNKTIONEN                #
@@ -160,7 +165,7 @@ def maske_erstellen(orig_img, untere_grenze=0, obere_grenze=80, area_x=26, area_
     upper_color = (obere_grenze, obere_grenze, obere_grenze)
 
     # Filtere Bild nach Farbgrenzen
-    mask_img = cv.inRange(frame, lower_color, upper_color)
+    mask_img = cv.inRange(orig_img, lower_color, upper_color)
 
     # Kopie der Maske erstellen
     mask2 = mask_img.copy()
@@ -186,75 +191,110 @@ def maske_erstellen(orig_img, untere_grenze=0, obere_grenze=80, area_x=26, area_
     return mask_img
 
 
+# Streckenerkennung
+def Streckenerkennung():
+    # 1. Bild lesen und bearbeiten
+
+    # Lese Bild von Festplatte
+    # img = cv.imread('D:/samir/Dokumente/Studium/DHBW/Semester_5/Studienarbeit/Quellcode/Images/Oval3_4.jpg')
+    img = cv.imread(
+        'C:/Users/David/Documents/Studium/_Semester 5/Studienarbeit/Streckenbilder/OvaleStrecken/Oval3_7.jpg')
+
+    # Erstelle eine Kopie vom Bild
+    frame = img.copy()
+
+    # Bild auf bestimmte Groesse skalieren (verkleinern)
+    scale = 0.5
+    frame = cv.resize(frame, (0, 0), fx=scale, fy=scale)
+
+    # Bild in den HSV-Farbraum konvertieren
+    frame = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
+    # Bild aufhellen / verdunkeln
+    frame[:, :, 2] = frame[:, :, 2] - 4
+    # Bild von HSV zurueck nach BGR konvertieren
+    frame = cv.cvtColor(frame, cv.COLOR_HSV2BGR)
+
+    # Ermittle Bildgroesse
+    y_max = len(frame[:, 0])  # Breite des Bilds
+    x_max = len(frame[0, :])  # Hoehe des Bilds
+
+    # Ueberpruefen, ob das Bild im Hochformat ist. Wenn ja, das Bild auf Querformat drehen
+    if x_max < y_max:
+        frame = cv.rotate(frame, cv.ROTATE_90_COUNTERCLOCKWISE)  # Bild um 90° drehen
+        # Bildgroessen an Rotation anpassen
+        temp = x_max
+        x_max = y_max
+        y_max = temp
+
+    # 2. Maske erstellen und verbessern
+
+    # Definiere Farb-Ranges
+    lower_value = 0  # Untere Wertschwelle fuer Streckenerkennung (Ganz Schwarz)
+
+    # Groesse des Durchsuch-Bereichs festlegen: Hier: 26x26
+    area_x = 26
+    area_y = 26
+
+    # Fuer alle angegebenen Oberen Grenzwerte Masken zeichnen und ausgeben
+    for upper_value in range(60, 140, 20):
+        # Maske in Funktion erstellen
+        mask = maske_erstellen(frame, lower_value, upper_value, area_x, area_y)
+
+        # Zeige die Maske an
+        # window_name = 'Mask' + upper_value.__str__()  # Namen des Maskenfensters eine Zahl anhaengen
+        # cv.namedWindow(window_name, cv.WINDOW_NORMAL)
+        # cv.imshow(window_name, mask)
+        # cv.resizeWindow(window_name, int(x_max * scale), int(y_max * scale))
+    # ui1.Mask60.
+    window1.show()
+    # cv.waitKey(0)  # Warten auf Tastendruck
+    # cv.destroyAllWindows()  # Alle Fenster schliesen
+
+
 #############################
 # CODE START                #
 #############################
 
-# 1. Bild lesen und bearbeiten
 
-# Lese Bild von Festplatte
-# img = cv.imread('D:/samir/Dokumente/Studium/DHBW/Semester_5/Studienarbeit/Quellcode/Images/Oval3_4.jpg')
-img = cv.imread('C:/Users/David/Documents/Studium/_Semester 5/Studienarbeit/Streckenbilder/OvaleStrecken/Oval3_4.jpg')
+# 1
 
+app = QApplication(sys.argv)
+window = QMainWindow()
+ui = Ui_QMainWindow()
+ui.setupUi(window)
+ui.pushButton.clicked.connect(Streckenerkennung)
+window.show()
 
-# Erstelle eine Kopie vom Bild
-frame = img.copy()
+app1 = QApplication(sys.argv)
+window1 = QDialog()
+ui1 = Ui_Dialog1()
+ui1.setupUi(window1)
 
-# Bild auf bestimmte Groesse skalieren (verkleinern)
-scale = 0.5
-frame = cv.resize(frame, (0, 0), fx=scale, fy=scale)
+# window1.show()
 
+app2 = QApplication(sys.argv)
+window2 = QDialog()
+ui2 = Ui_Dialog2()
+ui2.setupUi(window2)
 
-# Bild in den HSV-Farbraum konvertieren
-frame = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
-# Bild aufhellen / verdunkeln
-frame[:, :, 2] = frame[:, :, 2] - 4
-# Bild von HSV zurueck nach BGR konvertieren
-frame = cv.cvtColor(frame, cv.COLOR_HSV2BGR)
+# window2.show()
 
-
-# Ermittle Bildgroesse
-y_max = len(frame[:, 0])  # Breite des Bilds
-x_max = len(frame[0, :])  # Hoehe des Bilds
-
-# Ueberpruefen, ob das Bild im Querformat ist. Wenn nicht, das Bild auf Querformat bringen
-if x_max < y_max:
-    frame = cv.rotate(frame, cv.ROTATE_90_COUNTERCLOCKWISE)  # Bild um 90° drehen
-    # Bildgroessen an Rotation anpassen
-    temp = x_max
-    x_max = y_max
-    y_max = temp
+# app.exec_()
+# app1.exec_()
+# app2.exec_()
 
 
-# 2. Maske erstellen und verbessern
-
-# Definiere Farb-Ranges
-lower_value = 0  # Untere Wertschwelle fuer Streckenerkennung (Ganz Schwarz)
-upper_values = [60, 80, 100, 120]  # Obere Wertschellen (Dunkles Grau) in einer Liste
-
-# Groesse des Durchsuch-Bereichs festlegen: Hier: 26x26
-area_x = 26
-area_y = 26
-
-# Fuer alle angegebenen Oberen Grenzwerte Masken zeichnen und ausgeben
-for i in range(0, len(upper_values)):
-    # Maske in Funktion erstellen
-    mask = maske_erstellen(frame, lower_value, upper_values[i], area_x, area_y)
-
-    # Zeige die Maske an
-    window_name = 'Mask' + i.__str__()  # Namen des Maskenfensters eine Zahl anhaengen
-    cv.namedWindow(window_name, cv.WINDOW_NORMAL)
-    cv.imshow(window_name, mask)
-    cv.resizeWindow(window_name, int(x_max * scale), int(y_max * scale))
-
-cv.waitKey(0)  # Warten auf Tastendruck
-cv.destroyAllWindows()  # Alle Fenster schliesen
+cv.waitKey(0)
 
 # TODO: Ersetzen durch Auswahl in GUI
 auswahl = 0    # Welches der 4 Bilder sieht am besten aus?
-auswahl_wert = upper_values[auswahl]  # "Bester" Maskenwert zwischenspeichern
-upper_values = [auswahl_wert - 15, auswahl_wert - 10, auswahl_wert - 5, auswahl_wert, auswahl_wert + 5,
+auswahl_wert = 120  # upper_values[auswahl]  # "Bester" Maskenwert zwischenspeichern
+upper_values = [auswahl_wert - 10, auswahl_wert - 5, auswahl_wert, auswahl_wert + 5,
                 auswahl_wert + 10, auswahl_wert + 15]  # Neue obere Wertschellen (Dunkles Grau) in einer Liste
+# Fuer den Fall, dass 120 als ersten Wert ausgewaehlt wurde, die Liste anpassen
+if auswahl == 3:
+    upper_values -= 5
+
 
 # Fuer alle angegebenen Oberen Grenzwerte Masken zeichnen und ausgeben
 for i in range(0, len(upper_values)):
@@ -271,7 +311,7 @@ cv.waitKey(0)  # Warten auf Tastendruck
 cv.destroyAllWindows()  # Alle Fenster schliesen
 
 # TODO: Ersetzen durch Auswahl in GUI
-auswahl = 4    # Welches der 7 Bilder sieht am besten aus?
+auswahl = 4    # Welches der 6 Bilder sieht am besten aus?
 mask = maske_erstellen(frame, lower_value, upper_values[auswahl], area_x, area_y)  # Maske erstellen
 
 # Kopie der neuen, bearbeiteten Maske erstellen und zu Farbbild konvertieren
