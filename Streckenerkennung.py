@@ -3,7 +3,8 @@ import cv2 as cv    # OpenCV
 import numpy as np  # NumPy
 
 import sys
-from PyQt5.QtWidgets import QApplication, QDialog, QMainWindow
+from PyQt5.QtWidgets import QApplication, QDialog, QMainWindow, QFileDialog, QLineEdit
+from PyQt5.QtGui import QPixmap
 from Modellbahnerkennung import *
 from GrobeMaske import *
 from GenaueMaske import *
@@ -197,8 +198,7 @@ def Streckenerkennung():
 
     # Lese Bild von Festplatte
     # img = cv.imread('D:/samir/Dokumente/Studium/DHBW/Semester_5/Studienarbeit/Quellcode/Images/Oval3_4.jpg')
-    img = cv.imread(
-        'C:/Users/David/Documents/Studium/_Semester 5/Studienarbeit/Streckenbilder/OvaleStrecken/Oval3_7.jpg')
+    img = cv.imread(img_path)
 
     # Erstelle eine Kopie vom Bild
     frame = img.copy()
@@ -262,13 +262,75 @@ app = QApplication(sys.argv)
 window = QMainWindow()
 ui = Ui_QMainWindow()
 ui.setupUi(window)
-ui.pushButton.clicked.connect(Streckenerkennung)
+# ui.pushButton.clicked.connect(Streckenerkennung)
 window.show()
+
+# def function():
+  #   image=cv2.imread('C:/Users/samir/Desktop/test.jpg',1)
+    # ui.show_frame_in_display(image)
+
+Fehler1 = "Falsches Dateiformat"
+Fehler2 = "Wähle Bild aus"
+Fehler3 = "Kein Bild benötigt!"
+
+def test_if_parameters_fit():
+    if ui.comboBox.currentText() == "Kamera": # Bild ueber Kamera auslesen
+        if (ui.lineEdit_2.text() != "" and ui.lineEdit_2.text() != Fehler1 and ui.lineEdit_2.text() != Fehler2):
+            ui.label.setPixmap(QtGui.QPixmap("C:/Users/samir/Desktop/test2.jpg"))
+            Streckenerkennung()
+        else:
+            ui.lineEdit_2.setText(Fehler2)
+    else: # Bild einlesen
+        if ((ui.lineEdit_2.text() != "" and ui.lineEdit_2.text() != Fehler1 and ui.lineEdit_2.text() != Fehler2) and \
+                (ui.lineEdit.text() != "" and ui.lineEdit.text() != Fehler1) and ui.lineEdit.text() != Fehler2):
+            ui.label.setPixmap(QtGui.QPixmap("C:/Users/samir/Desktop/test.jpg"))
+            Streckenerkennung()
+        else:
+            if ui.lineEdit.text() == "" or ui.lineEdit.text() == Fehler1:
+                ui.lineEdit.setText(Fehler2)
+            else:
+                ui.lineEdit_2.setText(Fehler2)
+
+
+ui.pushButton.clicked.connect(test_if_parameters_fit)
+
+img_path = ""
+
+def selectInputFile():
+    if ui.comboBox.currentText() == "Kamera":
+        ui.lineEdit.setText(Fehler3)
+        ui.label.clear()
+    else:
+        img_path, _ = QFileDialog.getOpenFileName()
+        laengeImg = len(img_path)
+        ending = img_path[laengeImg-4:laengeImg]
+        if (ending == ".jpg" or ending == ".png" or ending == ".PNG" or ending == "jpeg"):
+            ui.lineEdit.setText(img_path)
+            ui.label.setPixmap(QtGui.QPixmap(img_path))
+        else:
+            ui.lineEdit.setText(Fehler1)
+
+ui.pushButton_2.clicked.connect(selectInputFile)
+
+img_strecke_path = ""
+
+def selectOutputFile():
+    img_strecke_path, _ = QFileDialog.getOpenFileName()
+    laengeImg = len(img_strecke_path)
+    ending = img_strecke_path[laengeImg - 4:laengeImg]
+    if (ending == ".jpg" or ending == ".png" or ending == ".PNG" or ending == "jpeg"):
+        ui.lineEdit_2.setText(img_strecke_path)
+    else:
+        ui.lineEdit_2.setText(Fehler1)
+
+ui.pushButton_3.clicked.connect(selectOutputFile)
+
 
 app1 = QApplication(sys.argv)
 window1 = QDialog()
 ui1 = Ui_Dialog1()
 ui1.setupUi(window1)
+
 
 # window1.show()
 
