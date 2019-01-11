@@ -3,8 +3,10 @@ import cv2 as cv    # OpenCV
 import numpy as np  # NumPy
 
 import sys
+# from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QApplication, QDialog, QMainWindow, QFileDialog, QLineEdit
 from PyQt5.QtGui import QPixmap
+# from PyQt5.QtCore import *
 from Modellbahnerkennung import *
 from GrobeMaske import *
 from GenaueMaske import *
@@ -198,6 +200,7 @@ def Streckenerkennung():
 
     # Lese Bild von Festplatte
     # img = cv.imread('D:/samir/Dokumente/Studium/DHBW/Semester_5/Studienarbeit/Quellcode/Images/Oval3_4.jpg')
+    global img
     img = cv.imread(img_path)
 
     # Erstelle eine Kopie vom Bild
@@ -215,6 +218,8 @@ def Streckenerkennung():
     frame = cv.cvtColor(frame, cv.COLOR_HSV2BGR)
 
     # Ermittle Bildgroesse
+    global y_max
+    global x_max
     y_max = len(frame[:, 0])  # Breite des Bilds
     x_max = len(frame[0, :])  # Hoehe des Bilds
 
@@ -245,9 +250,36 @@ def Streckenerkennung():
         # cv.namedWindow(window_name, cv.WINDOW_NORMAL)
         # cv.imshow(window_name, mask)
         # cv.resizeWindow(window_name, int(x_max * scale), int(y_max * scale))
-    # ui1.Mask60.
+    #ui1.Mask60.scene()
+
+    # mask = cv.cvtColor(mask, cv.COLOR_GRAY2BGR)
+    #ui1.Mask60.cvImage = mask
+    #height, width, byteValue = ui1.Mask60.cvImage.shape
+    #byteValue = byteValue * width
+    # cv.cvtColor(ui1.Mask60.cvImage, cv.COLOR_BGR2RGB, ui1.Mask60.cvImage)
+
+    # ui1.Mask60.mQImage = QImage(ui1.Mask60.cvImage, width, height, byteValue, QImage.Format_RGB888)
+    # scene = new QGraphicsScene(this);
+    # ui->graphicsView->setScene(scene);
+    # scene->addPixmap(QPixmap::fromImage(QImage(image.data, image.cols, image.rows, QImage::Format_RGB888)));
+
+
+
+    # image = cv.cvtColor(mask, cv.COLOR_BGR2RGB)
+    # height, width = image.shape[:2]
+    #
+    # scene = QtWidgets.QGraphicsScene()
+    # scene.clear()
+    # widthStep = width * 3
+    # ui1.Mask60.frame = QtGui.QImage(image.data, width, height, widthStep, QtGui.QImage.Format_RGB888)
+    # ui1.Mask60.pixmap = QPixmap.fromImage(ui1.Mask60.frame)
+    # scene.addPixmap(ui1.Mask60.pixmap)
+    # scene.update()
+    # ui1.Mask60.setScene(scene)
+    # ui1.Mask60.update()
+
     window1.show()
-    # cv.waitKey(0)  # Warten auf Tastendruck
+    cv.waitKey(0)  # Warten auf Tastendruck
     # cv.destroyAllWindows()  # Alle Fenster schliesen
 
 
@@ -301,6 +333,7 @@ def selectInputFile():
         ui.lineEdit.setText(Fehler3)
         ui.label.clear()
     else:
+        global img_path
         img_path, _ = QFileDialog.getOpenFileName()
         laengeImg = len(img_path)
         ending = img_path[laengeImg-4:laengeImg]
@@ -330,7 +363,6 @@ app1 = QApplication(sys.argv)
 window1 = QDialog()
 ui1 = Ui_Dialog1()
 ui1.setupUi(window1)
-
 
 # window1.show()
 
