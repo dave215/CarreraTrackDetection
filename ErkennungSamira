@@ -3,13 +3,12 @@ import cv2 as cv    # OpenCV
 import numpy as np  # NumPy
 
 import sys
-# from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QApplication, QDialog, QMainWindow, QFileDialog, QLineEdit
 from PyQt5.QtGui import QPixmap
-# from PyQt5.QtCore import *
 from Modellbahnerkennung import *
 from GrobeMaske import *
 from GenaueMaske import *
+
 
 #############################
 # FUNKTIONEN                #
@@ -180,7 +179,7 @@ def maske_erstellen(orig_img, untere_grenze=0, obere_grenze=80, area_x=26, area_
     # Kleine Bereiche aus der Maske entfernen
     # Schwellwerte in der Maske ueberpruefen
     for x in range(area2_x, x_max - area2_x, area_x):  # X-Werte durchgehen
-        for y in range(area2_y, y_max - area2_y, area_x):  # Y-Werte durchgehen
+        for y in range(area2_y, y_max - area2_y, area_y):  # Y-Werte durchgehen
             # Area of Interest aus kopierter Maske herauskopieren
             copy = (mask2[y - area2_y:y + area2_y, x - area2_x:x + area2_x])
             summe = sum(sum(copy))  # Summe der weissen Pixel in dem Bereich berechnen
@@ -192,6 +191,15 @@ def maske_erstellen(orig_img, untere_grenze=0, obere_grenze=80, area_x=26, area_
                 mask_img[y - area2_y:y + area2_y, x - area2_x:x + area2_x] = 255
 
     return mask_img
+
+def bild_umwandeln(mask):
+    img_debug = cv.cvtColor(mask, cv.COLOR_GRAY2BGR)
+    height, width, channels = img_debug.shape
+    bytesPerLine = channels * width
+    masktest = QtGui.QImage(img_debug.data, width, height, bytesPerLine, QtGui.QImage.Format_RGB888)
+    tempPic1 = QtGui.QPixmap.fromImage(masktest)
+    tempPic2 = QtGui.QPixmap(tempPic1)
+    return tempPic2
 
 
 # Streckenerkennung
@@ -222,7 +230,6 @@ def Streckenerkennung():
     global x_max
     y_max = len(frame[:, 0])  # Breite des Bilds
     x_max = len(frame[0, :])  # Hoehe des Bilds
-
     # Ueberpruefen, ob das Bild im Hochformat ist. Wenn ja, das Bild auf Querformat drehen
     if x_max < y_max:
         frame = cv.rotate(frame, cv.ROTATE_90_COUNTERCLOCKWISE)  # Bild um 90° drehen
@@ -240,46 +247,28 @@ def Streckenerkennung():
     area_x = 26
     area_y = 26
 
+    mask = []
     # Fuer alle angegebenen Oberen Grenzwerte Masken zeichnen und ausgeben
     for upper_value in range(60, 140, 20):
         # Maske in Funktion erstellen
-        mask = maske_erstellen(frame, lower_value, upper_value, area_x, area_y)
-
-        # Zeige die Maske an
-        # window_name = 'Mask' + upper_value.__str__()  # Namen des Maskenfensters eine Zahl anhaengen
-        # cv.namedWindow(window_name, cv.WINDOW_NORMAL)
-        # cv.imshow(window_name, mask)
-        # cv.resizeWindow(window_name, int(x_max * scale), int(y_max * scale))
-    #ui1.Mask60.scene()
-
-    # mask = cv.cvtColor(mask, cv.COLOR_GRAY2BGR)
-    #ui1.Mask60.cvImage = mask
-    #height, width, byteValue = ui1.Mask60.cvImage.shape
-    #byteValue = byteValue * width
-    # cv.cvtColor(ui1.Mask60.cvImage, cv.COLOR_BGR2RGB, ui1.Mask60.cvImage)
-
-    # ui1.Mask60.mQImage = QImage(ui1.Mask60.cvImage, width, height, byteValue, QImage.Format_RGB888)
-    # scene = new QGraphicsScene(this);
-    # ui->graphicsView->setScene(scene);
-    # scene->addPixmap(QPixmap::fromImage(QImage(image.data, image.cols, image.rows, QImage::Format_RGB888)));
+        temp = maske_erstellen(frame, lower_value, upper_value, area_x, area_y)
+        mask.append(temp)
 
 
+    # Masken anzeigbar machen
+    mask60 = bild_umwandeln(mask[0])
+    mask80 = bild_umwandeln(mask[1])
+    mask100 = bild_umwandeln(mask[2])
+    mask120 = bild_umwandeln(mask[3])
 
-    # image = cv.cvtColor(mask, cv.COLOR_BGR2RGB)
-    # height, width = image.shape[:2]
-    #
-    # scene = QtWidgets.QGraphicsScene()
-    # scene.clear()
-    # widthStep = width * 3
-    # ui1.Mask60.frame = QtGui.QImage(image.data, width, height, widthStep, QtGui.QImage.Format_RGB888)
-    # ui1.Mask60.pixmap = QPixmap.fromImage(ui1.Mask60.frame)
-    # scene.addPixmap(ui1.Mask60.pixmap)
-    # scene.update()
-    # ui1.Mask60.setScene(scene)
-    # ui1.Mask60.update()
+    # Masken anzeigen
+    ui1.label60.setPixmap(mask60)
+    ui1.label80.setPixmap(mask80)
+    ui1.label100.setPixmap(mask100)
+    ui1.label120.setPixmap(mask120)
 
     window1.show()
-    cv.waitKey(0)  # Warten auf Tastendruck
+    # cv.waitKey(0)  # Warten auf Tastendruck
     # cv.destroyAllWindows()  # Alle Fenster schliesen
 
 
@@ -308,14 +297,12 @@ Fehler3 = "Kein Bild benötigt!"
 def test_if_parameters_fit():
     if ui.comboBox.currentText() == "Kamera": # Bild ueber Kamera auslesen
         if (ui.lineEdit_2.text() != "" and ui.lineEdit_2.text() != Fehler1 and ui.lineEdit_2.text() != Fehler2):
-            ui.label.setPixmap(QtGui.QPixmap("C:/Users/samir/Desktop/test2.jpg"))
-            Streckenerkennung()
+            Streckenerkennung(img_path)
         else:
             ui.lineEdit_2.setText(Fehler2)
     else: # Bild einlesen
         if ((ui.lineEdit_2.text() != "" and ui.lineEdit_2.text() != Fehler1 and ui.lineEdit_2.text() != Fehler2) and \
                 (ui.lineEdit.text() != "" and ui.lineEdit.text() != Fehler1) and ui.lineEdit.text() != Fehler2):
-            ui.label.setPixmap(QtGui.QPixmap("C:/Users/samir/Desktop/test.jpg"))
             Streckenerkennung()
         else:
             if ui.lineEdit.text() == "" or ui.lineEdit.text() == Fehler1:
@@ -326,7 +313,7 @@ def test_if_parameters_fit():
 
 ui.pushButton.clicked.connect(test_if_parameters_fit)
 
-img_path = ""
+
 
 def selectInputFile():
     if ui.comboBox.currentText() == "Kamera":
@@ -364,6 +351,7 @@ window1 = QDialog()
 ui1 = Ui_Dialog1()
 ui1.setupUi(window1)
 
+
 # window1.show()
 
 app2 = QApplication(sys.argv)
@@ -386,20 +374,35 @@ auswahl_wert = 120  # upper_values[auswahl]  # "Bester" Maskenwert zwischenspeic
 upper_values = [auswahl_wert - 10, auswahl_wert - 5, auswahl_wert, auswahl_wert + 5,
                 auswahl_wert + 10, auswahl_wert + 15]  # Neue obere Wertschellen (Dunkles Grau) in einer Liste
 # Fuer den Fall, dass 120 als ersten Wert ausgewaehlt wurde, die Liste anpassen
-if auswahl == 3:
+if (auswahl == 3 or auswahl == 2):
     upper_values -= 5
 
-
+mask_genau = []
 # Fuer alle angegebenen Oberen Grenzwerte Masken zeichnen und ausgeben
 for i in range(0, len(upper_values)):
     # Maske in Funktion erstellen
-    mask = maske_erstellen(frame, lower_value, upper_values[i], area_x, area_y)
+    temp = maske_erstellen(frame, lower_value, upper_values[i], area_x, area_y)
 
-    # Zeige die Maske an
-    window_name = 'Mask' + i.__str__()  # Namen des Maskenfensters eine Zahl anhaengen
-    cv.namedWindow(window_name, cv.WINDOW_NORMAL)
-    cv.imshow(window_name, mask)
-    cv.resizeWindow(window_name, int(x_max * scale), int(y_max * scale))
+    mask_genau.append(temp)
+
+
+# Masken anzeigbar machen
+mask1 = bild_umwandeln(mask[0])
+mask2 = bild_umwandeln(mask[1])
+mask3 = bild_umwandeln(mask[2])
+mask4 = bild_umwandeln(mask[3])
+mask5 = bild_umwandeln(mask[4])
+mask6 = bild_umwandeln(mask[5])
+
+# Masken anzeigen
+ui2.label1.setPixmap(mask1)
+ui2.label2.setPixmap(mask2)
+ui2.label3.setPixmap(mask3)
+ui2.label4.setPixmap(mask4)
+ui2.label5.setPixmap(mask5)
+ui2.label6.setPixmap(mask6)
+
+window2.show()
 
 cv.waitKey(0)  # Warten auf Tastendruck
 cv.destroyAllWindows()  # Alle Fenster schliesen
