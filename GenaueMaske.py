@@ -22,13 +22,13 @@ class Ui_Dialog2(object):
         self.pushButton_3.setGeometry(QtCore.QRect(270, 1509, 140, 50))
         self.pushButton_3.setObjectName("pushButton_3")
         self.pushButton_4 = QtWidgets.QPushButton(Dialog)
-        self.pushButton_4.setGeometry(QtCore.QRect(610, 453, 140, 50))
+        self.pushButton_4.setGeometry(QtCore.QRect(910, 453, 140, 50))
         self.pushButton_4.setObjectName("pushButton_4")
         self.pushButton_5 = QtWidgets.QPushButton(Dialog)
-        self.pushButton_5.setGeometry(QtCore.QRect(610, 956, 140, 50))
+        self.pushButton_5.setGeometry(QtCore.QRect(910, 956, 140, 50))
         self.pushButton_5.setObjectName("pushButton_5")
         self.pushButton_6 = QtWidgets.QPushButton(Dialog)
-        self.pushButton_6.setGeometry(QtCore.QRect(610, 1509, 140, 50))
+        self.pushButton_6.setGeometry(QtCore.QRect(910, 1509, 140, 50))
         self.pushButton_6.setObjectName("pushButton_6")
 
         self.label1 = QtWidgets.QLabel(Dialog)
@@ -50,19 +50,19 @@ class Ui_Dialog2(object):
         self.label3.setObjectName("Mask3")
 
         self.label4 = QtWidgets.QLabel(Dialog)
-        self.label4.setGeometry(QtCore.QRect(380, 50, 600, 353))
+        self.label4.setGeometry(QtCore.QRect(680, 50, 600, 353))
         self.label4.setText("")
         self.label4.setScaledContents(True)
         self.label4.setObjectName("Mask4")
 
         self.label5 = QtWidgets.QLabel(Dialog)
-        self.label5.setGeometry(QtCore.QRect(380, 553, 600, 353))
+        self.label5.setGeometry(QtCore.QRect(680, 553, 600, 353))
         self.label5.setText("")
         self.label5.setScaledContents(True)
         self.label5.setObjectName("Mask5")
 
         self.label6 = QtWidgets.QLabel(Dialog)
-        self.label6.setGeometry(QtCore.QRect(380, 1056, 600, 353))
+        self.label6.setGeometry(QtCore.QRect(680, 1056, 600, 353))
         self.label6.setText("")
         self.label6.setScaledContents(True)
         self.label6.setObjectName("Mask6")
@@ -81,12 +81,12 @@ class Ui_Dialog2(object):
         self.pushButton_6.setText(_translate("Dialog", "6"))
 
 
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    Dialog = QtWidgets.QDialog()
-    ui2 = Ui_Dialog2()
-    ui2.setupUi(Dialog)
-    Dialog.show()
-    sys.exit(app.exec_())
+# if __name__ == "__main__":
+import sys
+app2 = QtWidgets.QApplication(sys.argv)
+Dialog2 = QtWidgets.QDialog()
+ui2 = Ui_Dialog2()
+ui2.setupUi(Dialog2)
+# Dialog2.show()
+# sys.exit(app2.exec_())
 
