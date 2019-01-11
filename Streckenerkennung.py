@@ -9,6 +9,7 @@ from Modellbahnerkennung import *
 from GrobeMaske import *
 from GenaueMaske import *
 
+
 #############################
 # FUNKTIONEN                #
 #############################
@@ -178,7 +179,7 @@ def maske_erstellen(orig_img, untere_grenze=0, obere_grenze=80, area_x=26, area_
     # Kleine Bereiche aus der Maske entfernen
     # Schwellwerte in der Maske ueberpruefen
     for x in range(area2_x, x_max - area2_x, area_x):  # X-Werte durchgehen
-        for y in range(area2_y, y_max - area2_y, area_x):  # Y-Werte durchgehen
+        for y in range(area2_y, y_max - area2_y, area_y):  # Y-Werte durchgehen
             # Area of Interest aus kopierter Maske herauskopieren
             copy = (mask2[y - area2_y:y + area2_y, x - area2_x:x + area2_x])
             summe = sum(sum(copy))  # Summe der weissen Pixel in dem Bereich berechnen
@@ -192,28 +193,35 @@ def maske_erstellen(orig_img, untere_grenze=0, obere_grenze=80, area_x=26, area_
     return mask_img
 
 
+def bild_umwandeln(mask):
+    img_debug = cv.cvtColor(mask, cv.COLOR_GRAY2BGR) # Bild in BGR konvertieren
+    height, width, channels = img_debug.shape
+    bytesPerLine = channels * width
+    # Format umformen, sodass es anzeigbar wird
+    masktest = QtGui.QImage(img_debug.data, width, height, bytesPerLine, QtGui.QImage.Format_RGB888)
+    tempPic1 = QtGui.QPixmap.fromImage(masktest)
+    tempPic2 = QtGui.QPixmap(tempPic1)
+    return tempPic2
+
+
 # Funktionen für die Buttons der Masken
 # Maske mit Wert 60
 def button_mask60():
-    # print('Mask 60')
     open_GenaueMaske(60)
 
 
 # Maske mit Wert 80
 def button_mask80():
-    # print('Mask 80')
     open_GenaueMaske(80)
 
 
 # Maske mit Wert 100
 def button_mask100():
-    # print('Mask 100')
     open_GenaueMaske(100)
 
 
 # Maske mit Wert 120
 def button_mask120():
-    # print('Mask 120')
     open_GenaueMaske(120)
 
 
@@ -236,55 +244,65 @@ def open_GenaueMaske(ersteMaske):
         temp = maske_erstellen(frame, lower_value, upper_value, area_x, area_y)
         mask_genau.append(temp)  # Erstelle Maske in Array speichern
 
-    window2.show()
+    # Masken anzeigbar machen
+    mask1 = bild_umwandeln(mask_genau[0])
+    mask2 = bild_umwandeln(mask_genau[1])
+    mask3 = bild_umwandeln(mask_genau[2])
+    mask4 = bild_umwandeln(mask_genau[3])
+    mask5 = bild_umwandeln(mask_genau[4])
+    mask6 = bild_umwandeln(mask_genau[5])
+
+    # Masken anzeigen
+    ui2.label1.setPixmap(mask1)
+    ui2.label2.setPixmap(mask2)
+    ui2.label3.setPixmap(mask3)
+    ui2.label4.setPixmap(mask4)
+    ui2.label5.setPixmap(mask5)
+    ui2.label6.setPixmap(mask6)
+
+    Dialog2.show()
 
 
 # Genaue Maske 1
 def button_mask1():
-    print('Maske 1')
     close_diaglogs(0)
 
 
 # Genaue Maske 2
 def button_mask2():
-    print('Maske 2')
     close_diaglogs(1)
 
 
 # Genaue Maske 3
 def button_mask3():
-    print('Maske 3')
     close_diaglogs(2)
 
 
 # Genaue Maske 4
 def button_mask4():
-    print('Maske 4')
     close_diaglogs(3)
 
 
 # Genaue Maske 5
 def button_mask5():
-    print('Maske 5')
     close_diaglogs(4)
 
 
 # Genaue Maske 6
 def button_mask6():
-    print('Maske 6')
     close_diaglogs(5)
 
 
 # Alle offenen Dialoge schliessen
 def close_diaglogs(zweiteMaske):
-    print('Schliesse Fenster')
+    # print('Schliesse Fenster')
 
     global mask
     mask = mask_genau[zweiteMaske]  # Beste Maske speichern
 
     # Fesnter schließen
-    window2.close()
-    window1.close()
+    Dialog2.close()
+    Dialog1.close()
 
     # Starte mit der Maske den letzen Teil der Streckenerkennung
     Streckenerkennung2()
@@ -347,11 +365,26 @@ def Streckenerkennung():
     for upper_value in range(60, 140, 20):
         # Maske in Funktion erstellen
         temp = maske_erstellen(frame, lower_value, upper_value, area_x, area_y)
-        mask.append(temp)  # Maske im Array speichern
+        mask.append(temp)
 
-    window1.show()
-    cv.waitKey(0)  # Warten auf Tastendruck
 
+    # Masken anzeigbar machen
+    mask60 = bild_umwandeln(mask[0])
+    mask80 = bild_umwandeln(mask[1])
+    mask100 = bild_umwandeln(mask[2])
+    mask120 = bild_umwandeln(mask[3])
+
+    # Masken anzeigen
+    ui1.label60.setPixmap(mask60)
+    ui1.label80.setPixmap(mask80)
+    ui1.label100.setPixmap(mask100)
+    ui1.label120.setPixmap(mask120)
+
+    # cv.imwrite(img_strecke_path, mask[1])
+
+    Dialog1.show()
+
+    # cv.waitKey(0)  # Warten auf Tastendruck
 
 def Streckenerkennung2():
     # Kopie der neuen, bearbeiteten Maske erstellen und zu Farbbild konvertieren
@@ -371,8 +404,8 @@ def Streckenerkennung2():
     y_step = int(y_max / testpoints)
 
     # Startpunkt setzen
-    punkt_x = 0
-    punkt_y = 0
+    punkt_x = int(x_max / 2)
+    punkt_y = int(y_max / 2)
 
     # Nach Strecke auf Maske suchen
     while (mask[punkt_y, punkt_x] == 0) and (punkt_x <= x_max - x_step):
@@ -530,15 +563,15 @@ def Streckenerkennung2():
 
         abstaende.append(abstand)  # Abstand dem Array hinzufuegen
 
-    # Kuerzester Abstand herausfinden
+        # Kuerzester Abstand herausfinden
     if abstaende[0] > abstaende[1]:
         richtung = -1
     else:
         richtung = 1
 
-    # 8. Abstaende zwischen Innen- und Aussenkante auf gesamter Strecke herausfinden und speichern
+        # 8. Abstaende zwischen Innen- und Aussenkante auf gesamter Strecke herausfinden und speichern
 
-    # Array fuer Abstaende anlegen
+        # Array fuer Abstaende anlegen
     abstaende = np.zeros(int((count_innen - stp) / stp + 1), dtype=np.int16)
 
     # Gesamte Strecke ablaufen
@@ -606,39 +639,25 @@ def Streckenerkennung2():
     # 9. Bilder anzeigen und speichern
 
     # Zeige Bilder an
-    # Zeige Originalbild an
-    cv.namedWindow('Image', cv.WINDOW_NORMAL)
-    cv.imshow('Image', img)
-    cv.resizeWindow('Image', int(x_max * scale), int(y_max * scale))
-
-    # Zeige die Maske an
-    cv.namedWindow('Mask', cv.WINDOW_NORMAL)
-    cv.imshow('Mask', mask)
-    cv.resizeWindow('Mask', int(x_max * scale), int(y_max * scale))
-
-    # Zeige das Bild mit der markierten Strecke an
-    cv.namedWindow('Frame', cv.WINDOW_NORMAL)
-    cv.imshow('Frame', frame)
-    cv.resizeWindow('Frame', int(x_max * scale), int(y_max * scale))
-
     # Zeige das Bild mit dem selbstgezeichneten Streckenverlauf an
-    cv.namedWindow('Strecke', cv.WINDOW_NORMAL)
-    cv.imshow('Strecke', img_strecke)
-    cv.resizeWindow('Strecke', x_max, y_max)
+    # cv.namedWindow('Strecke', cv.WINDOW_NORMAL)
+    # cv.imshow('Strecke', img_strecke)
+    # cv.resizeWindow('Strecke', x_max, y_max)
 
-    # Speichere Bilder als Datei
-    # cv.imwrite('C:/Users/samir/Desktop/test.jpg', img_strecke)
-    # cv.imwrite('C:/Users/samir/Desktop/test2.jpg', img_debug)
-    cv.imwrite('C:/Users/David/Desktop/test.jpg', img_strecke)
-    cv.imwrite('C:/Users/David/Desktop/test2.jpg', img_debug)
+    cv.imwrite("C:/Users/samir/Desktop/test2.jpg", img_debug)
+
+    cv.imwrite(img_strecke_path, img_strecke)
+    ui.label.setPixmap(QtGui.QPixmap(img_strecke_path))
 
     # Warte auf Tastendruck (sonst sieht man die Fenster nicht)
     key = cv.waitKey(0)
 
     # Schliesse alle Fenster
     cv.destroyAllWindows()
-    
+
     # TODO: Bild im Hauptfenster updaten und keine OpenCV Fenster mehr anzeigen
+
+
 
 
 #############################
@@ -646,7 +665,7 @@ def Streckenerkennung2():
 #############################
 
 
-# 1.
+# 1
 
 app = QApplication(sys.argv)
 window = QMainWindow()
@@ -662,75 +681,90 @@ Fehler1 = "Falsches Dateiformat"
 Fehler2 = "Wähle Bild aus"
 Fehler3 = "Kein Bild benötigt!"
 
+# Pruefen, dass alle benötigten Parameter vorhanden sind
 def test_if_parameters_fit():
-    if ui.comboBox.currentText() == "Kamera": # Bild ueber Kamera auslesen
+    # Bild ueber Kamera einlesen
+    if ui.comboBox.currentText() == "Kamera":
+        # Pfad zu Speicher vorhanden
         if (ui.lineEdit_2.text() != "" and ui.lineEdit_2.text() != Fehler1 and ui.lineEdit_2.text() != Fehler2):
-            ui.label.setPixmap(QtGui.QPixmap("C:/Users/samir/Desktop/test2.jpg"))
-            Streckenerkennung()
+            # TODO: Kamerabild aufnehmen
+            # Streckenerkennung() # Streckenerkennung starten
+            ui.lineEdit.setText("Bitte Bild wählen")
         else:
-            ui.lineEdit_2.setText(Fehler2)
-    else: # Bild einlesen
+            ui.lineEdit_2.setText(Fehler2) # Fehler ausgeben, dass Datei fehlt
+    # Bild über Dateipfad einlesen
+    else:
+        # Pfad zu Datei und Speicher vorhanden
         if ((ui.lineEdit_2.text() != "" and ui.lineEdit_2.text() != Fehler1 and ui.lineEdit_2.text() != Fehler2) and \
                 (ui.lineEdit.text() != "" and ui.lineEdit.text() != Fehler1) and ui.lineEdit.text() != Fehler2):
-            ui.label.setPixmap(QtGui.QPixmap("C:/Users/samir/Desktop/test.jpg"))
-            Streckenerkennung()
+            Streckenerkennung() # Streckenerkennung starten
         else:
+            # Fehler ausgeben, dass Datei fehlt
             if ui.lineEdit.text() == "" or ui.lineEdit.text() == Fehler1:
                 ui.lineEdit.setText(Fehler2)
             else:
                 ui.lineEdit_2.setText(Fehler2)
 
-
+# Start-Button druecken
 ui.pushButton.clicked.connect(test_if_parameters_fit)
 
-img_path = ""
 
+# Bild fuer Streckenerkennung einlesen
 def selectInputFile():
+    # falls Kamera ausgewählt, Fehler anzeigen
     if ui.comboBox.currentText() == "Kamera":
         ui.lineEdit.setText(Fehler3)
         ui.label.clear()
+    # Pfad auswählen
     else:
         global img_path
-        img_path, _ = QFileDialog.getOpenFileName()
+        img_path, _ = QFileDialog.getOpenFileName() # Explorer oeffnen und Pfad waehlen
         laengeImg = len(img_path)
         ending = img_path[laengeImg-4:laengeImg]
-        if (ending == ".jpg" or ending == ".png" or ending == ".PNG" or ending == "jpeg"):
-            ui.lineEdit.setText(img_path)
-            ui.label.setPixmap(QtGui.QPixmap(img_path))
+        # Dateiformat (Ende des Pfads) auf Bild ueberpruefen
+        if (ending == ".jpg" or ending == ".png" or ending == ".PNG" or ending == "jpeg" or ending == ".JPG"):
+            ui.lineEdit.setText(img_path) # Pfad setzen
+            ui.label.setPixmap(QtGui.QPixmap(img_path)) # Bild anzeigen
+        # Falsches Dateiformat, Fehler ausgeben
         else:
             ui.lineEdit.setText(Fehler1)
 
+# Datei auswaehlen Button
 ui.pushButton_2.clicked.connect(selectInputFile)
 
-img_strecke_path = ""
 
+# Dateipfad fuer Bild der Strecke festlegen
 def selectOutputFile():
-    img_strecke_path, _ = QFileDialog.getOpenFileName()
+    global img_strecke_path
+    img_strecke_path, _ = QFileDialog.getOpenFileName() # Explorer oeffnen und Pfad waehlen
     laengeImg = len(img_strecke_path)
     ending = img_strecke_path[laengeImg - 4:laengeImg]
-    if (ending == ".jpg" or ending == ".png" or ending == ".PNG" or ending == "jpeg"):
-        ui.lineEdit_2.setText(img_strecke_path)
+    # Dateiformat (Ende des Pfads) auf Bild ueberpruefen
+    if (ending == ".jpg" or ending == ".png" or ending == ".PNG" or ending == "jpeg" or ending == ".JPG"):
+        ui.lineEdit_2.setText(img_strecke_path) # Pfad setzen
+    # Falsches Dateiformat, Fehler ausgeben
     else:
         ui.lineEdit_2.setText(Fehler1)
 
+# Speicherdatei auswaehlen Button
 ui.pushButton_3.clicked.connect(selectOutputFile)
 
-
-app1 = QApplication(sys.argv)
-window1 = QDialog()
-ui1 = Ui_Dialog1()
-ui1.setupUi(window1)
+# Grobe Maske Fenster --> Schon in GUI Datei?!
+# app1 = QApplication(sys.argv)
+# window1 = QDialog()
+# ui1 = Ui_Dialog1()
+# ui1.setupUi(window1)
 
 ui1.pushButton.clicked.connect(button_mask60)
 ui1.pushButton_2.clicked.connect(button_mask80)
 ui1.pushButton_3.clicked.connect(button_mask100)
 ui1.pushButton_4.clicked.connect(button_mask120)
 
-
-app2 = QApplication(sys.argv)
-window2 = QDialog()
-ui2 = Ui_Dialog2()
-ui2.setupUi(window2)
+# auch in GUI Datei ... kann raus??
+# app2 = QApplication(sys.argv)
+# window2 = QDialog()
+# ui2 = Ui_Dialog2()
+# ui2.setupUi(window2)
 
 ui2.pushButton.clicked.connect(button_mask1)
 ui2.pushButton_2.clicked.connect(button_mask2)
@@ -741,3 +775,4 @@ ui2.pushButton_6.clicked.connect(button_mask6)
 
 sys.exit(app.exec_())
 
+cv.waitKey(0)
