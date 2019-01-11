@@ -69,12 +69,12 @@ class Ui_Dialog1(object):
         self.pushButton_4.setText(_translate("Dialog", "120"))
 
 
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    Dialog = QtWidgets.QDialog()
-    ui = Ui_Dialog1()
-    ui.setupUi(Dialog)
-    Dialog.show()
-    sys.exit(app.exec_())
+# if __name__ == "__main__":
+import sys
+app1 = QtWidgets.QApplication(sys.argv)
+Dialog1 = QtWidgets.QDialog()
+ui1 = Ui_Dialog1()
+ui1.setupUi(Dialog1)
+# Dialog1.show()
+# sys.exit(app1.exec_())
 
