@@ -190,11 +190,23 @@ def maske_erstellen(orig_img, untere_grenze=0, obere_grenze=80, area_x=26, area_
             else:  # Sonst wird der Bereich auf Weiss gesetzt
                 mask_img[y - area2_y:y + area2_y, x - area2_x:x + area2_x] = 255
 
+    # Maske optimieren
+    for x in range(area2_x + area_x, x_max - area2_x - area_x, area_x):  # X-Werte durchgehen
+        for y in range(area2_y + area_x, y_max - area2_y - area_y, area_y):  # Y-Werte durchgehen
+            temp = mask_img[y, x]  # Aktueller Farbwert des Bereichs zwischenspeichern
+            # Wenn alle 4 Bereiche um den Punkt in der anderen Farbe sind, dann aendere die Farbe des Bereichs
+            if mask_img[y - area_y, x] != temp and mask_img[y + area_y, x] != temp \
+                    and mask_img[y, x - area_x] != temp and mask_img[y, x + area_x] != temp:
+                if temp == 0:  # Schwarz in Weiss aendern
+                    mask_img[y - area2_y:y + area2_y, x - area2_x:x + area2_x] = 255
+                else:  # Weiss in schwarz aendern
+                    mask_img[y - area2_y:y + area2_y, x - area2_x:x + area2_x] = 0
+
     return mask_img
 
 
 def bild_umwandeln(mask):
-    img_debug = cv.cvtColor(mask, cv.COLOR_GRAY2BGR) # Bild in BGR konvertieren
+    img_debug = cv.cvtColor(mask, cv.COLOR_GRAY2BGR)  # Bild in BGR konvertieren
     height, width, channels = img_debug.shape
     bytesPerLine = channels * width
     # Format umformen, sodass es anzeigbar wird
@@ -736,7 +748,8 @@ ui.pushButton_2.clicked.connect(selectInputFile)
 # Dateipfad fuer Bild der Strecke festlegen
 def selectOutputFile():
     global img_strecke_path
-    img_strecke_path, _ = QFileDialog.getOpenFileName() # Explorer oeffnen und Pfad waehlen
+    img_strecke_path, _ = QFileDialog.getSaveFileName(QFileDialog(), 'Speichern unter',
+                                                      '.', "Bilddatei (*.jpg)")  # Explorer oeffnen und Pfad waehlen
     laengeImg = len(img_strecke_path)
     ending = img_strecke_path[laengeImg - 4:laengeImg]
     # Dateiformat (Ende des Pfads) auf Bild ueberpruefen
@@ -749,22 +762,10 @@ def selectOutputFile():
 # Speicherdatei auswaehlen Button
 ui.pushButton_3.clicked.connect(selectOutputFile)
 
-# Grobe Maske Fenster --> Schon in GUI Datei?!
-# app1 = QApplication(sys.argv)
-# window1 = QDialog()
-# ui1 = Ui_Dialog1()
-# ui1.setupUi(window1)
-
 ui1.pushButton.clicked.connect(button_mask60)
 ui1.pushButton_2.clicked.connect(button_mask80)
 ui1.pushButton_3.clicked.connect(button_mask100)
 ui1.pushButton_4.clicked.connect(button_mask120)
-
-# auch in GUI Datei ... kann raus??
-# app2 = QApplication(sys.argv)
-# window2 = QDialog()
-# ui2 = Ui_Dialog2()
-# ui2.setupUi(window2)
 
 ui2.pushButton.clicked.connect(button_mask1)
 ui2.pushButton_2.clicked.connect(button_mask2)
@@ -775,4 +776,3 @@ ui2.pushButton_6.clicked.connect(button_mask6)
 
 sys.exit(app.exec_())
 
-cv.waitKey(0)
