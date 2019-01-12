@@ -2,9 +2,9 @@
 import cv2 as cv    # OpenCV
 import numpy as np  # NumPy
 
-# import sys
+import sys
 from PyQt5.QtWidgets import QApplication, QDialog, QMainWindow, QFileDialog, QLineEdit
-# from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QPixmap
 from Modellbahnerkennung import *
 from GrobeMaske import *
 from GenaueMaske import *
@@ -212,29 +212,29 @@ def maske_erstellen(orig_img, untere_grenze=0, obere_grenze=80, area_x=26, area_
                     (x >= x_max - area2_x - area_x + 1 and y <= area_y) or \
                     (x >= x_max - area2_x - area_x + 1 and y >= y_max - area2_y - area_y + 1):
                 continue
-            elif (x == area2_x) and mask_img[y - area_y, x] != temp and mask_img[y + area_y, x] != temp and mask_img[
-                y, x + area_x] != temp:
+            elif (x == area2_x) and mask_img[y - area_y, x] != temp and mask_img[y + area_y, x] != temp and \
+                    mask_img[y, x + area_x] != temp:
                 # print("test1")
                 mask_img[y - area2_y:y + area2_y, x - area2_x:x + area2_x] = mask_img[y - area_y, x]
-            elif x >= x_max - area2_x - area_x + 1 and mask_img[y - area_y, x] != temp and mask_img[
-                y + area_y, x] != temp and mask_img[y, x - area_x] != temp:
+            elif x >= x_max - area2_x - area_x + 1 and mask_img[y - area_y, x] != temp and \
+                    mask_img[y + area_y, x] != temp and mask_img[y, x - area_x] != temp:
                 # print("test2")
                 mask_img[y - area2_y:y + area2_y, x - area2_x:x + area2_x] = mask_img[y - area_y, x]
-            elif (y == area2_y) and mask_img[y + area_y, x] != temp and mask_img[y, x - area_x] != temp and mask_img[
-                y, x + area_x] != temp:
+            elif (y == area2_y) and mask_img[y + area_y, x] != temp and mask_img[y, x - area_x] != temp and \
+                    mask_img[y, x + area_x] != temp:
                 # print("test3")
                 mask_img[y - area2_y:y + area2_y, x - area2_x:x + area2_x] = mask_img[y + area_y, x]
             elif (y >= y_max - area2_y - area_y + 1):
-                if mask_img[y - area_y, x] != temp and mask_img[y, x - area_x] != temp and mask_img[
-                    y, x + area_x] != temp:
+                if mask_img[y - area_y, x] != temp and mask_img[y, x - area_x] != temp and \
+                        mask_img[y, x + area_x] != temp:
                     # print("test4")
                     mask_img[y - area2_y:y + area2_y, x - area2_x:x + area2_x] = mask_img[y - area_y, x]
             else:
-                if mask_img[y - area_y, x] != temp and mask_img[y + area_y, x] != temp \
-                        and mask_img[y, x - area_x] != temp and mask_img[y, x + area_x] != temp:
+                if mask_img[y - area_y, x] != temp and mask_img[y + area_y, x] != temp and \
+                        mask_img[y, x - area_x] != temp and mask_img[y, x + area_x] != temp:
                     mask_img[y - area2_y:y + area2_y, x - area2_x:x + area2_x] = mask_img[y - area_y, x]
 
-    return mask_img
+    return mask_img  # Maske zurueckgeben
 
 
 # Bild fuer Streckenerkennung einlesen
@@ -789,3 +789,4 @@ ui2.pushButton_6.clicked.connect(button_mask6)
 
 # GUI (Programm) ausfuehren
 sys.exit(app.exec_())
+
