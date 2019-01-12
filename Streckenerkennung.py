@@ -200,8 +200,6 @@ def maske_erstellen(orig_img, untere_grenze=0, obere_grenze=80, area_x=26, area_
                 mask_img[y - area2_y:y + area2_y, x - area2_x:x + area2_x] = 255
 
     # Maske optimieren
-    mask2 = mask_img.copy()
-
     for x in range(area2_x, x_max - area2_x, area_x):  # X-Werte durchgehen
         # print(x)
         for y in range(area2_y, y_max - area2_y, area_y):  # Y-Werte durchgehen
@@ -244,7 +242,7 @@ def selectInputFile():
     # Pfad auswählen
     else:
         global img_path
-        img_path, _ = QFileDialog.getOpenFileName() # Explorer oeffnen und Pfad waehlen
+        img_path, _ = QFileDialog.getOpenFileName()  # Explorer oeffnen und Pfad waehlen
         laengeImg = len(img_path)
         ending = img_path[laengeImg-4:laengeImg]
         # Dateiformat (Ende des Pfads) auf Bild ueberpruefen
@@ -286,7 +284,7 @@ def test_if_parameters_fit():
         # Pfad zu Datei und Speicher vorhanden
         if ((ui.lineEdit_2.text() != "" and ui.lineEdit_2.text() != Fehler1 and ui.lineEdit_2.text() != Fehler2) and \
                 (ui.lineEdit.text() != "" and ui.lineEdit.text() != Fehler1) and ui.lineEdit.text() != Fehler2):
-            Streckenerkennung() # Streckenerkennung starten
+            Streckenerkennung()  # Streckenerkennung starten
         else:
             # Fehler ausgeben, dass Datei fehlt
             if ui.lineEdit.text() == "" or ui.lineEdit.text() == Fehler1:
@@ -304,27 +302,6 @@ def bild_umwandeln(mask):
     tempPic1 = QtGui.QPixmap.fromImage(masktest)
     tempPic2 = QtGui.QPixmap(tempPic1)
     return tempPic2
-
-
-# Funktionen für die Buttons der Masken
-# Maske mit Wert 60
-def button_mask60():
-    open_GenaueMaske(60)
-
-
-# Maske mit Wert 80
-def button_mask80():
-    open_GenaueMaske(80)
-
-
-# Maske mit Wert 100
-def button_mask100():
-    open_GenaueMaske(100)
-
-
-# Maske mit Wert 120
-def button_mask120():
-    open_GenaueMaske(120)
 
 
 # Fenster mit der genauen Maske auswaehlen
@@ -364,36 +341,6 @@ def open_GenaueMaske(ersteMaske):
     ui2.label6.setPixmap(mask6)
 
     Dialog2.show()
-
-
-# Genaue Maske 1
-def button_mask1():
-    close_diaglogs(0)
-
-
-# Genaue Maske 2
-def button_mask2():
-    close_diaglogs(1)
-
-
-# Genaue Maske 3
-def button_mask3():
-    close_diaglogs(2)
-
-
-# Genaue Maske 4
-def button_mask4():
-    close_diaglogs(3)
-
-
-# Genaue Maske 5
-def button_mask5():
-    close_diaglogs(4)
-
-
-# Genaue Maske 6
-def button_mask6():
-    close_diaglogs(5)
 
 
 # Alle offenen Dialoge schliessen und beste Maske speichern
@@ -464,7 +411,6 @@ def Streckenerkennung():
     area_x = 26
     area_y = 26
 
-    global mask_array
     mask_array = []
     # Fuer alle angegebenen Oberen Grenzwerte Masken zeichnen und ausgeben
     for upper_value in range(60, 140, 20):
@@ -772,18 +718,19 @@ ui.pushButton_2.clicked.connect(selectInputFile)
 ui.pushButton_3.clicked.connect(selectOutputFile)
 
 # Buttons zum Auswaehlen der groben Maske
-ui1.pushButton.clicked.connect(button_mask60)
-ui1.pushButton_2.clicked.connect(button_mask80)
-ui1.pushButton_3.clicked.connect(button_mask100)
-ui1.pushButton_4.clicked.connect(button_mask120)
+ui1.pushButton.clicked.connect(lambda: open_GenaueMaske(60))
+ui1.pushButton_2.clicked.connect(lambda: open_GenaueMaske(80))
+ui1.pushButton_3.clicked.connect(lambda: open_GenaueMaske(100))
+ui1.pushButton_4.clicked.connect(lambda: open_GenaueMaske(120))
 
 # Buttons zum Auswaehlen der genauen Maske
-ui2.pushButton.clicked.connect(button_mask1)
-ui2.pushButton_2.clicked.connect(button_mask2)
-ui2.pushButton_3.clicked.connect(button_mask3)
-ui2.pushButton_4.clicked.connect(button_mask4)
-ui2.pushButton_5.clicked.connect(button_mask5)
-ui2.pushButton_6.clicked.connect(button_mask6)
+ui2.pushButton.clicked.connect(lambda: close_diaglogs(0))
+ui2.pushButton_2.clicked.connect(lambda: close_diaglogs(1))
+ui2.pushButton_3.clicked.connect(lambda: close_diaglogs(2))
+ui2.pushButton_4.clicked.connect(lambda: close_diaglogs(3))
+ui2.pushButton_5.clicked.connect(lambda: close_diaglogs(4))
+ui2.pushButton_6.clicked.connect(lambda: close_diaglogs(5))
 
 # GUI (Programm) ausfuehren
 sys.exit(app.exec_())
+
