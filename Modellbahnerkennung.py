@@ -34,7 +34,6 @@ class Ui_QMainWindow(object):
         self.label = QtWidgets.QLabel(self.centralwidget)
         self.label.setGeometry(QtCore.QRect(40, 500, 1800, 1060))
         self.label.setText("")
-#         self.label.setPixmap(QtGui.QPixmap("test2.jpg"))
         self.label.setScaledContents(True)
         self.label.setObjectName("ImgStrecke")
         self.pushButton_3 = QtWidgets.QPushButton(self.centralwidget)
@@ -64,11 +63,9 @@ class Ui_QMainWindow(object):
         self.pushButton_3.setText(_translate("QMainWindow", "Strecke speichern"))
 
 
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    QMainWindow = QtWidgets.QMainWindow()
-    ui = Ui_QMainWindow()
-    ui.setupUi(QMainWindow)
-    QMainWindow.show()
-    sys.exit(app.exec_())
+import sys
+app = QtWidgets.QApplication(sys.argv)
+QMainWindow = QtWidgets.QMainWindow()
+ui = Ui_QMainWindow()
+ui.setupUi(QMainWindow)
+QMainWindow.show()
