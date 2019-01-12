@@ -89,4 +89,3 @@ ui2 = Ui_Dialog2()
 ui2.setupUi(Dialog2)
 # Dialog2.show()
 # sys.exit(app2.exec_())
-
