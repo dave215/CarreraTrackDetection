@@ -14,8 +14,6 @@ from GenaueMaske import *
 # GLOBALE VARIABLEN         #
 #############################
 
-# TODO
-
 Fehler1 = "Falsches Dateiformat"
 Fehler2 = "Wähle Bild aus"
 Fehler3 = "Kein Bild benötigt!"
@@ -466,20 +464,20 @@ def Streckenerkennung():
     area_x = 26
     area_y = 26
 
-    global mask
-    mask = []
+    global mask_array
+    mask_array = []
     # Fuer alle angegebenen Oberen Grenzwerte Masken zeichnen und ausgeben
     for upper_value in range(60, 140, 20):
         # Maske in Funktion erstellen
         temp = maske_erstellen(frame, lower_value, upper_value, area_x, area_y)
-        mask.append(temp)
+        mask_array.append(temp)
 
     # GUI
     # Masken anzeigbar machen
-    mask60 = bild_umwandeln(mask[0])
-    mask80 = bild_umwandeln(mask[1])
-    mask100 = bild_umwandeln(mask[2])
-    mask120 = bild_umwandeln(mask[3])
+    mask60 = bild_umwandeln(mask_array[0])
+    mask80 = bild_umwandeln(mask_array[1])
+    mask100 = bild_umwandeln(mask_array[2])
+    mask120 = bild_umwandeln(mask_array[3])
 
     # Masken anzeigen
     ui1.label60.setPixmap(mask60)
@@ -789,4 +787,3 @@ ui2.pushButton_6.clicked.connect(button_mask6)
 
 # GUI (Programm) ausfuehren
 sys.exit(app.exec_())
-
