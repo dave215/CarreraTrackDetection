@@ -2,12 +2,13 @@
 import cv2 as cv    # OpenCV
 import numpy as np  # NumPy
 
-import sys
+# import sys
 from PyQt5.QtWidgets import QApplication, QDialog, QMainWindow, QFileDialog, QLineEdit
-from PyQt5.QtGui import QPixmap
+# from PyQt5.QtGui import QPixmap
 from Modellbahnerkennung import *
 from GrobeMaske import *
 from GenaueMaske import *
+
 
 #############################
 # GLOBALE VARIABLEN         #
@@ -200,34 +201,38 @@ def maske_erstellen(orig_img, untere_grenze=0, obere_grenze=80, area_x=26, area_
             else:  # Sonst wird der Bereich auf Weiss gesetzt
                 mask_img[y - area2_y:y + area2_y, x - area2_x:x + area2_x] = 255
 
+    # Maske optimieren
     mask2 = mask_img.copy()
 
     for x in range(area2_x, x_max - area2_x, area_x):  # X-Werte durchgehen
         # print(x)
         for y in range(area2_y, y_max - area2_y, area_y):  # Y-Werte durchgehen
             temp = mask_img[y, x]
-            if (x <= area_x and y <= area_y) or (x <= area_x and y >= y_max-area2_y-area_y+1) or \
-                    (x >= x_max-area2_x-area_x+1 and y <= area_y) or \
-                    (x >= x_max-area2_x-area_x+1 and y >= y_max-area2_y-area_y+1):
+            if (x <= area_x and y <= area_y) or (x <= area_x and y >= y_max - area2_y - area_y + 1) or \
+                    (x >= x_max - area2_x - area_x + 1 and y <= area_y) or \
+                    (x >= x_max - area2_x - area_x + 1 and y >= y_max - area2_y - area_y + 1):
                 continue
-            elif (x == area2_x) and mask_img[y - area_y, x] != temp and mask_img[y + area_y, x] != temp and mask_img[y, x + area_x] != temp:
+            elif (x == area2_x) and mask_img[y - area_y, x] != temp and mask_img[y + area_y, x] != temp and mask_img[
+                y, x + area_x] != temp:
                 # print("test1")
-                mask_img[y-area2_y:y + area2_y, x - area2_x:x + area2_x] = mask_img[y-area_y, x]
-            elif x >= x_max-area2_x-area_x+1 and mask_img[y - area_y, x] != temp and mask_img[y + area_y, x] != temp and mask_img[y, x - area_x] != temp:
+                mask_img[y - area2_y:y + area2_y, x - area2_x:x + area2_x] = mask_img[y - area_y, x]
+            elif x >= x_max - area2_x - area_x + 1 and mask_img[y - area_y, x] != temp and mask_img[
+                y + area_y, x] != temp and mask_img[y, x - area_x] != temp:
                 # print("test2")
                 mask_img[y - area2_y:y + area2_y, x - area2_x:x + area2_x] = mask_img[y - area_y, x]
-            elif (y == area2_y) and mask_img[y + area_y, x] != temp and mask_img[y, x - area_x] != temp and mask_img[y, x + area_x] != temp:
+            elif (y == area2_y) and mask_img[y + area_y, x] != temp and mask_img[y, x - area_x] != temp and mask_img[
+                y, x + area_x] != temp:
                 # print("test3")
                 mask_img[y - area2_y:y + area2_y, x - area2_x:x + area2_x] = mask_img[y + area_y, x]
-            elif (y >= y_max-area2_y-area_y+1):
-                if mask_img[y - area_y, x] != temp and mask_img[y, x - area_x] != temp and mask_img[y, x + area_x] != temp:
+            elif (y >= y_max - area2_y - area_y + 1):
+                if mask_img[y - area_y, x] != temp and mask_img[y, x - area_x] != temp and mask_img[
+                    y, x + area_x] != temp:
                     # print("test4")
                     mask_img[y - area2_y:y + area2_y, x - area2_x:x + area2_x] = mask_img[y - area_y, x]
             else:
                 if mask_img[y - area_y, x] != temp and mask_img[y + area_y, x] != temp \
                         and mask_img[y, x - area_x] != temp and mask_img[y, x + area_x] != temp:
                     mask_img[y - area2_y:y + area2_y, x - area2_x:x + area2_x] = mask_img[y - area_y, x]
-
 
     return mask_img
 
@@ -256,7 +261,7 @@ def selectInputFile():
 # Dateipfad fuer Bild der Strecke festlegen
 def selectOutputFile():
     global img_strecke_path
-    img_strecke_path, _ = QFileDialog.getSaveFileName() # Explorer oeffnen und Pfad waehlen
+    img_strecke_path, _ = QFileDialog.getSaveFileName()  # Explorer oeffnen und Pfad waehlen
     laengeImg = len(img_strecke_path)
     ending = img_strecke_path[laengeImg - 4:laengeImg]
     # Dateiformat (Ende des Pfads) auf Bild ueberpruefen
@@ -293,7 +298,7 @@ def test_if_parameters_fit():
 
 
 def bild_umwandeln(mask):
-    img_debug = cv.cvtColor(mask, cv.COLOR_GRAY2BGR) # Bild in BGR konvertieren
+    img_debug = cv.cvtColor(mask, cv.COLOR_GRAY2BGR)  # Bild in BGR konvertieren
     height, width, channels = img_debug.shape
     bytesPerLine = channels * width
     # Format umformen, sodass es anzeigbar wird
@@ -342,7 +347,7 @@ def open_GenaueMaske(ersteMaske):
         # Maske in Funktion erstellen
         temp = maske_erstellen(frame, lower_value, upper_value, area_x, area_y)
         mask_genau.append(temp)  # Erstelle Maske in Array speichern
-    
+
     # GUI
     # Masken anzeigbar machen
     mask1 = bild_umwandeln(mask_genau[0])
@@ -469,7 +474,6 @@ def Streckenerkennung():
         temp = maske_erstellen(frame, lower_value, upper_value, area_x, area_y)
         mask.append(temp)
 
-    
     # GUI
     # Masken anzeigbar machen
     mask60 = bild_umwandeln(mask[0])
@@ -483,11 +487,8 @@ def Streckenerkennung():
     ui1.label100.setPixmap(mask100)
     ui1.label120.setPixmap(mask120)
 
-    # cv.imwrite(img_strecke_path, mask[1])
-
     Dialog1.show()
 
-    # cv.waitKey(0)  # Warten auf Tastendruck
 
 def Streckenerkennung2():
     # Kopie der neuen, bearbeiteten Maske erstellen und zu Farbbild konvertieren
@@ -511,7 +512,7 @@ def Streckenerkennung2():
     start_y = int(y_max / 2)
     punkt_x = start_x
     punkt_y = start_y
-    
+
     # Nach Strecke auf Maske suchen
     while (mask[punkt_y, punkt_x] == 0) and (punkt_x <= x_max - x_step):
         punkt_x += x_step
@@ -544,8 +545,8 @@ def Streckenerkennung2():
     # 4.1 Rand finden
     # 4.2 Kante ablaufen
 
-    # Von dem gefundenen Startpunkt auf der Strecke in verschiedenen Richtungen (insgesamt 8 Richtungen) den Rand der Maske
-    # suchen und von dort die Kanten ablaufen
+    # Von dem gefundenen Startpunkt auf der Strecke in verschiedenen Richtungen (insgesamt 8 Richtungen) den Rand der
+    # Maske suchen und von dort die Kanten ablaufen
 
     # Richtungsvektoren als Liste definieren
     step_list_x = (1, 1, 0, -1, -1, -1, 0, 1)
@@ -616,10 +617,6 @@ def Streckenerkennung2():
     print('Laenge Innenkante:', count_innen)
 
     # 6. Kanten glaetten und Bild aufhellen
-
-    # Kanten glaetten (unscharf machen und Mittelwert nehmen)
-    # img_strecke = cv.blur(img_strecke, (5, 5))
-    # img_strecke = cv.medianBlur(img_strecke, 7)
 
     kante_innen = kanten_glaetten(kante_innen, count_innen, (255, 0, 0))
     kante_innen = kanten_glaetten(kante_innen, count_innen, (255, 0, 0), 100)
@@ -757,18 +754,15 @@ def Streckenerkennung2():
     # Warte auf Tastendruck (sonst sieht man die cv Fenster nicht)
     # key = cv.waitKey(0)
 
-    # Schliesse alle Fenster
+    # Schliesse alle cv Fenster
     # cv.destroyAllWindows()
-
-    
-
 
 
 #############################
 # CODE START                #
 #############################
 
-# GUI 1
+# GUI: Verbinden der Buttons mit Funktionen
 
 # Start-Button druecken
 ui.pushButton.clicked.connect(test_if_parameters_fit)
@@ -779,11 +773,13 @@ ui.pushButton_2.clicked.connect(selectInputFile)
 # Speicherdatei auswaehlen Button
 ui.pushButton_3.clicked.connect(selectOutputFile)
 
+# Buttons zum Auswaehlen der groben Maske
 ui1.pushButton.clicked.connect(button_mask60)
 ui1.pushButton_2.clicked.connect(button_mask80)
 ui1.pushButton_3.clicked.connect(button_mask100)
 ui1.pushButton_4.clicked.connect(button_mask120)
 
+# Buttons zum Auswaehlen der genauen Maske
 ui2.pushButton.clicked.connect(button_mask1)
 ui2.pushButton_2.clicked.connect(button_mask2)
 ui2.pushButton_3.clicked.connect(button_mask3)
@@ -791,4 +787,5 @@ ui2.pushButton_4.clicked.connect(button_mask4)
 ui2.pushButton_5.clicked.connect(button_mask5)
 ui2.pushButton_6.clicked.connect(button_mask6)
 
+# GUI (Programm) ausfuehren
 sys.exit(app.exec_())
