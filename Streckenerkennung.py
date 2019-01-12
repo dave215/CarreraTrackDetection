@@ -28,12 +28,11 @@ Fehler3 = "Kein Bild benötigt!"
 # zwei Punkten mit einstellbarem Abstand eine Linie gezeichnet (interpoliert) wird.
 # Zurueckgegeben wird der neue "geglaettete" Array mit neuen Kantenpunkten
 def kanten_glaetten(kanten_array, pixel_count, farbe, step_size=50):
-
     # Startpunkt aus Array holen
     start_x = kanten_array[0, 0]
     start_y = kanten_array[0, 1]
 
-    # Alte Kante mit schwarz uebermalen
+    # Alte Kante schwarz uebermalen
     for a in range(0, pixel_count, 1):
         x = kanten_array[a, 0]
         y = kanten_array[a, 1]
@@ -42,20 +41,15 @@ def kanten_glaetten(kanten_array, pixel_count, farbe, step_size=50):
     cv.line(img_strecke, (kanten_array[0, 0], kanten_array[0, 1]),
             (kanten_array[pixel_count - step_size, 0], kanten_array[pixel_count - step_size, 1]), (0, 0, 0), 10)
 
-    # cv.circle(img_strecke, (start_x, start_y), 20, (255, 255, 0), 3)  # Kreis um Start der Kantenglaettung zeichnen
-
     # In einer Schleife die Kantenpunkte mit bestimmter Schrittweite ablaufen
     for a in range(step_size, pixel_count - step_size, step_size):
         diff_step_x = (kanten_array[a, 0] - start_x) / step_size
         diff_step_y = (kanten_array[a, 1] - start_y) / step_size
-        # cv.line(img_strecke, (start_x, start_y), (kanten_array[a-1, 0], kanten_array[a-1, 1]), (0, 0, 0), 5)
 
         # Zwischen den Kantenpunkten interpolieren (Linie glaetten) und diese Linie zeichnen
         for b in range(a - step_size, a - 1):
-            # img_strecke[kanten_array[b, 1], kanten_array[b, 0]] = (0, 0, 0)  # Bisherigen Kantenpunkt schwarz machen
             kanten_array[b, 0] = start_x + (b - a + step_size) * diff_step_x  # Neuen Kantenpunkt (X) berechnen
             kanten_array[b, 1] = start_y + (b - a + step_size) * diff_step_y  # Neuen Kantenpunkt (Y) berechnen
-            # img_strecke[kanten_array[b, 1], kanten_array[b, 0]] = farbe  # Neuen Punkt in uebergebener Farbe zeichnen
 
         cv.line(img_strecke, (start_x, start_y), (kanten_array[a, 0], kanten_array[a, 1]), farbe)
         # Startpunkt fuer naechsten Schleifendurchlauf speichern
@@ -68,7 +62,7 @@ def kanten_glaetten(kanten_array, pixel_count, farbe, step_size=50):
     return kanten_array  # Neuen Array mit Kantenpunkten zurueckgeben
 
 
-# Rand der Maske finden
+# Startpunkt auf Rand der Maske finden
 def rand_finden(rand_x, rand_y, step_x, step_y):
     # Solange die Maske noch weiss ist (--> Man ist auf der Strecke), gehe eine Schrittweite weiter in Richtung Rand
     # Wenn der Rand der Strecke erreicht ist (--> Maske ist nun schwarz und man ist ausserhalb der Strecke),
@@ -95,7 +89,7 @@ def rand_finden(rand_x, rand_y, step_x, step_y):
     return rand_x, rand_y
 
 
-# Rand der Maske ablaufen
+# Gesamten Rand der Maske ablaufen
 def rand_ablaufen(kante_x, kante_y, farbe):
     # Uebergebenenen Startpunkt speichern, damit spaeter wieder darauf zugegriffen werden kann
     rand_x = kante_x
@@ -126,8 +120,8 @@ def rand_ablaufen(kante_x, kante_y, farbe):
             diff = abs(int(last_color) - int(mask[new_y, new_x]))  # Farbwertdifferenz (Betrag) speichern
 
             # Wenn Differenz groesser als 100 (also neuer Punkt im anderen Bereich) und Kante dort noch nicht gefunden
-            if diff > 100 and (img_strecke[new_y, new_x] == (0, 0, 0)).all() and \
-                    (img_strecke[kante_y + test_list_y[index - 1], kante_x + test_list_x[index - 1]] == (0, 0, 0)).all():
+            if (img_strecke[kante_y + test_list_y[index - 1], kante_x + test_list_x[index - 1]] == (0, 0, 0)).all() \
+                    and (img_strecke[new_y, new_x] == (0, 0, 0)).all() and diff > 100:
                 # Wenn Bild nicht schwarz, also in Strecke: vorherigen Punkt nehmen (der in Strecke war),
                 # der zuletzt getestet wurde, als neuen Kantenpunkt festlegen
                 if last_color != 0:
@@ -151,7 +145,6 @@ def rand_ablaufen(kante_x, kante_y, farbe):
         # Ueberpruefen, ob der Startpunkt erreicht wurde
         # Wenn ja, dann beende die Schleife (Beende die Kantenerkennung)
         if kante_x == rand_x and kante_y == rand_y:
-            # print('Startpunkt erreicht, Laenge = ', pixel_count)
             break
 
         # Gefundenen Punkt der Kante rot einfaerben
@@ -169,7 +162,7 @@ def rand_ablaufen(kante_x, kante_y, farbe):
     return pixel_count, kanten_array
 
 
-# Funktion zum Erstellen der Maske
+# Funktion zum Erstellen der Maske mit unterschiedlichen Grenzen
 def maske_erstellen(orig_img, untere_grenze=0, obere_grenze=80, area_x=26, area_y=26):
     # Definiere Farb-Ranges
     lower_color = (untere_grenze, untere_grenze, untere_grenze)
@@ -177,7 +170,6 @@ def maske_erstellen(orig_img, untere_grenze=0, obere_grenze=80, area_x=26, area_
 
     # Filtere Bild nach Farbgrenzen
     mask_img = cv.inRange(orig_img, lower_color, upper_color)
-
     # Kopie der Maske erstellen
     mask2 = mask_img.copy()
 
@@ -191,8 +183,7 @@ def maske_erstellen(orig_img, untere_grenze=0, obere_grenze=80, area_x=26, area_
         for y in range(area2_y, y_max - area2_y, area_y):  # Y-Werte durchgehen
             # Area of Interest aus kopierter Maske herauskopieren
             copy = (mask2[y - area2_y:y + area2_y, x - area2_x:x + area2_x])
-            summe = sum(sum(copy))  # Summe der weissen Pixel in dem Bereich berechnen
-            if summe <= area2_x * 250:  # Anzahl der Pixel auf Schwellwert ueberpruefen
+            if copy.sum() <= area2_x * 250:  # Anzahl der Pixel auf Schwellwert ueberpruefen
                 # Wenn zu wenig Pixel in diesem Bereich Weiss sind, dann wird der Bereich in der Maske
                 # auf Null (Schwarz) gesetzt
                 mask_img[y - area2_y:y + area2_y, x - area2_x:x + area2_x] = 0
@@ -201,7 +192,6 @@ def maske_erstellen(orig_img, untere_grenze=0, obere_grenze=80, area_x=26, area_
 
     # Maske optimieren
     for x in range(area2_x, x_max - area2_x, area_x):  # X-Werte durchgehen
-        # print(x)
         for y in range(area2_y, y_max - area2_y, area_y):  # Y-Werte durchgehen
             temp = mask_img[y, x]
             if (x <= area_x and y <= area_y) or (x <= area_x and y >= y_max - area2_y - area_y + 1) or \
@@ -210,20 +200,16 @@ def maske_erstellen(orig_img, untere_grenze=0, obere_grenze=80, area_x=26, area_
                 continue
             elif (x == area2_x) and mask_img[y - area_y, x] != temp and mask_img[y + area_y, x] != temp and \
                     mask_img[y, x + area_x] != temp:
-                # print("test1")
                 mask_img[y - area2_y:y + area2_y, x - area2_x:x + area2_x] = mask_img[y - area_y, x]
             elif x >= x_max - area2_x - area_x + 1 and mask_img[y - area_y, x] != temp and \
                     mask_img[y + area_y, x] != temp and mask_img[y, x - area_x] != temp:
-                # print("test2")
                 mask_img[y - area2_y:y + area2_y, x - area2_x:x + area2_x] = mask_img[y - area_y, x]
             elif (y == area2_y) and mask_img[y + area_y, x] != temp and mask_img[y, x - area_x] != temp and \
                     mask_img[y, x + area_x] != temp:
-                # print("test3")
                 mask_img[y - area2_y:y + area2_y, x - area2_x:x + area2_x] = mask_img[y + area_y, x]
             elif (y >= y_max - area2_y - area_y + 1):
                 if mask_img[y - area_y, x] != temp and mask_img[y, x - area_x] != temp and \
                         mask_img[y, x + area_x] != temp:
-                    # print("test4")
                     mask_img[y - area2_y:y + area2_y, x - area2_x:x + area2_x] = mask_img[y - area_y, x]
             else:
                 if mask_img[y - area_y, x] != temp and mask_img[y + area_y, x] != temp and \
@@ -275,24 +261,24 @@ def test_if_parameters_fit():
         # Pfad zu Speicher vorhanden
         if (ui.lineEdit_2.text() != "" and ui.lineEdit_2.text() != Fehler1 and ui.lineEdit_2.text() != Fehler2):
             # TODO: Kamerabild aufnehmen
-            # Streckenerkennung() # Streckenerkennung starten
-            ui.lineEdit.setText("Bitte Bild wählen")
+            # Streckenerkennung()  # Streckenerkennung starten
+            ui.lineEdit.setText("Funktion noch in Entwicklung, bitte Bild auswählen")
         else:
-            ui.lineEdit_2.setText(Fehler2) # Fehler ausgeben, dass Datei fehlt
+            ui.lineEdit_2.setText(Fehler2)  # Fehler ausgeben, dass Datei fehlt
     # Bild über Dateipfad einlesen
     else:
         # Pfad zu Datei und Speicher vorhanden
         if ((ui.lineEdit_2.text() != "" and ui.lineEdit_2.text() != Fehler1 and ui.lineEdit_2.text() != Fehler2) and \
                 (ui.lineEdit.text() != "" and ui.lineEdit.text() != Fehler1) and ui.lineEdit.text() != Fehler2):
             Streckenerkennung()  # Streckenerkennung starten
-        else:
-            # Fehler ausgeben, dass Datei fehlt
+        else:  # Fehler ausgeben, dass Datei fehlt
             if ui.lineEdit.text() == "" or ui.lineEdit.text() == Fehler1:
                 ui.lineEdit.setText(Fehler2)
             else:
                 ui.lineEdit_2.setText(Fehler2)
 
 
+# Wandelt Bild um, sodass es im Label anzeigbar wird
 def bild_umwandeln(mask):
     img_debug = cv.cvtColor(mask, cv.COLOR_GRAY2BGR)  # Bild in BGR konvertieren
     height, width, channels = img_debug.shape
@@ -304,20 +290,19 @@ def bild_umwandeln(mask):
     return tempPic2
 
 
-# Fenster mit der genauen Maske auswaehlen
+# Fenster mit den genauen Masken anzeigen
 def open_GenaueMaske(ersteMaske):
-    # print(ersteMaske)
     # Neue obere Wertschelle (Dunkles Grau)
     untereGrenze = 10
     obereGrenze = 15
-    # Fuer den Fall, dass 100 oder 120 als ersten Wert ausgewaehlt wurde, die Grenzen anpassen
+    # Fuer den Fall, dass 100 oder 120 als erster Wert ausgewaehlt wurde, die Grenzen anpassen
     if ersteMaske == 100 or ersteMaske == 120:
         untereGrenze = 15
         obereGrenze = 10
 
     global mask_genau
     mask_genau = []
-    # Fuer alle angegebenen Oberen Grenzwerte Masken zeichnen und ausgeben
+    # Fuer alle angegebenen oberen Grenzwerte Masken zeichnen und ausgeben
     for upper_value in range(ersteMaske - untereGrenze, ersteMaske + obereGrenze + 5, 5):
         # Maske in Funktion erstellen
         temp = maske_erstellen(frame, lower_value, upper_value, area_x, area_y)
@@ -340,13 +325,12 @@ def open_GenaueMaske(ersteMaske):
     ui2.label5.setPixmap(mask5)
     ui2.label6.setPixmap(mask6)
 
+    # Fenster mit genauen Masken anzeigen
     Dialog2.show()
 
 
 # Alle offenen Dialoge schliessen und beste Maske speichern
 def close_diaglogs(zweiteMaske):
-    # print('Schliesse Fenster')
-
     global mask
     mask = mask_genau[zweiteMaske]  # Beste Maske speichern
 
@@ -354,18 +338,15 @@ def close_diaglogs(zweiteMaske):
     Dialog2.close()
     Dialog1.close()
 
-    # Starte mit der Maske den letzen Teil der Streckenerkennung
+    # Starte den zweiten Teil der Streckenerkennung
     Streckenerkennung2()
 
 
-# Streckenerkennung
+# Streckenerkennung Teil 1
 def Streckenerkennung():
     # 1. Bild lesen und bearbeiten
 
-    # Lese Bild von Festplatte
-    # img = cv.imread('D:/samir/Dokumente/Studium/DHBW/Semester_5/Studienarbeit/Quellcode/Images/Oval3_4.jpg')
-    # img_path = "C:/Users/samir/Desktop/Oval1_2.jpg"
-    # img_strecke_path = "C:/Users/samir/Desktop/test.jpg"
+    # Lese Bild von Festplatte ueber gewaehlten Pfad
     global img
     img = cv.imread(img_path)
 
@@ -399,20 +380,21 @@ def Streckenerkennung():
         x_max = y_max
         y_max = temp
 
+
     # 2. Masken erstellen und auswaehlen
 
     # Definiere Farb-Ranges
     global lower_value
     lower_value = 0  # Untere Wertschwelle fuer Streckenerkennung (Ganz Schwarz)
 
-    # Groesse des Durchsuch-Bereichs festlegen: Hier: 26x26
+    # Groesse des Durchsuch-Bereichs festlegen. Hier: 26x26
     global area_x
     global area_y
     area_x = 26
     area_y = 26
 
     mask_array = []
-    # Fuer alle angegebenen Oberen Grenzwerte Masken zeichnen und ausgeben
+    # Fuer alle angegebenen oberen Grenzwerte Masken zeichnen und ausgeben
     for upper_value in range(60, 140, 20):
         # Maske in Funktion erstellen
         temp = maske_erstellen(frame, lower_value, upper_value, area_x, area_y)
@@ -431,14 +413,17 @@ def Streckenerkennung():
     ui1.label100.setPixmap(mask100)
     ui1.label120.setPixmap(mask120)
 
+    # Fenster mit Masken (grobe Schwellwerte) anzeigen
     Dialog1.show()
 
 
+# Streckenerkennung Teil 2
 def Streckenerkennung2():
     # Kopie der neuen, bearbeiteten Maske erstellen und zu Farbbild konvertieren
     global img_debug
     img_debug = mask.copy()
     img_debug = cv.cvtColor(img_debug, cv.COLOR_GRAY2BGR)
+
 
     # 3. Punkt der Strecke in Maske suchen
 
@@ -475,15 +460,16 @@ def Streckenerkennung2():
         punkt_x = start_x
         punkt_y = start_y
         count += 1
-        while (mask[punkt_y, punkt_x] == 0) and (punkt_x <= x_max - x_step) and (punkt_y <= y_max - y_step):
+        while (mask[punkt_y, punkt_x] == 0) and (punkt_x <= x_max - x_step) and (punkt_y >= 0):
             punkt_x += x_step
             punkt_y -= y_step
 
     # Gefundener Startpunkt ausgeben
-    print('Startpunkt: (', punkt_x, '|', punkt_y, ')')
+    # print('Startpunkt: (', punkt_x, '|', punkt_y, ')')
 
     # Markiere Punkt im Debugbild
     cv.circle(img_debug, (punkt_x, punkt_y), 20, (0, 255, 0), 3)
+
 
     # 4. Streckenraender suchen und Kanten ablaufen
     # 4.1 Rand finden
@@ -501,27 +487,23 @@ def Streckenerkennung2():
     raender_y = np.zeros(8, dtype=np.int16)  # y-Koordianten der Randpunkte
     counts = np.zeros(8, dtype=np.int16)  # Laenge der einzelnen Kanten
 
-    # 8 unterschiedliche Farben definieren, damit jede Kante seine eigene Farbe hat
-    test_farben = ((255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0), (255, 0, 255), (0, 255, 255),
-                   (255, 255, 255), (100, 100, 100))
+    # Farbe fuer Kanten definieren
+    test_farbe = (255, 255, 255)
 
     # Alle 8 Richtungen durchtesten
-    i = 0
-    while i < 8:
-        # Gehe von dem Startpunkt zum Rand der Maske, nutze den vorgegebene Richtungsvektor und speichere die gefundenen
-        # Randpunkte im Array ab
+    for i in range(0, 8, 1):
+        # Gehe von dem Startpunkt zum Rand der Maske, nutze den vorgegebene Richtungsvektor und
+        # speichere die gefundenen Randpunkte im Array ab
         (raender_x[i], raender_y[i]) = rand_finden(punkt_x, punkt_y, step_list_x[i], step_list_y[i])
 
         # Wenn ein "neuer" Rand gefunden worden ist, dann laufe die Kante ab
         if not (raender_x[i] == 0 and raender_y[i] == 0):
             # Kante ablaufen und mit bestimmter Farbe markieren
-            counts[i], _ = rand_ablaufen(raender_x[i], raender_y[i], test_farben[i])
-
-        # Naechste Richtung testen
-        i += 1
+            counts[i], _ = rand_ablaufen(raender_x[i], raender_y[i], test_farbe)
 
     # Unterschiedliche Kantenlaengen anzeigen
-    print('Kantenlaengen:', counts)
+    # print('Kantenlaengen:', counts)
+
 
     # 5. Innen- und Aussenkante aus allen Kanten finden, farbig markieren und Daten speichern
 
@@ -529,7 +511,7 @@ def Streckenerkennung2():
     sorted_array = sorted(counts, reverse=True)  # Array nach Groesse abfallend sortieren
     # Die erste Position ist die laengste Kante --> Das ist die aeussere Kante
     # Die zweite Positon ist die zweitlaengste Kante --> Die innere Kante
-    # Die anderen Postionen sind kleiner und deswegen nicht weiter relevant
+    # Die anderen Postionen sind kleiner und deswegen nicht relevant
 
     # Aeussere Kante im originalen Array suchen und Indexposition speichern
     pos_aussen = 0
@@ -549,27 +531,26 @@ def Streckenerkennung2():
     rand_aussen_y = raender_y[pos_aussen]
     count_aussen, kante_aussen = rand_ablaufen(rand_aussen_x, rand_aussen_y, (0, 0, 255))
 
-    # print(kante_aussen)  # Alle Kantenpunkte anzeigen
-
     # Innenkante Blau markieren und Daten umspeichern
     rand_innen_x = raender_x[pos_innen]
     rand_innen_y = raender_y[pos_innen]
     count_innen, kante_innen = rand_ablaufen(rand_innen_x, rand_innen_y, (255, 0, 0))
 
     # Kantenlaengen anzeigen
-    print('Laenge Aussenkante:', count_aussen)
-    print('Laenge Innenkante:', count_innen)
+    # print('Laenge Aussenkante:', count_aussen)
+    # print('Laenge Innenkante:', count_innen)
+
 
     # 6. Kanten glaetten und Bild aufhellen
 
+    # Innenkante glaetten
     kante_innen = kanten_glaetten(kante_innen, count_innen, (255, 0, 0))
     kante_innen = kanten_glaetten(kante_innen, count_innen, (255, 0, 0), 100)
 
+    # Aussenkante glaetten
     kante_aussen = kanten_glaetten(kante_aussen, count_aussen, (0, 0, 255))
     kante_aussen = kanten_glaetten(kante_aussen, count_aussen, (0, 0, 255), 100)
 
-    # Bild aufhellen
-    img_strecke[:, :] = (img_strecke[:, :] > 0) * 255
 
     # 7. Richtung zwischen Innen- und Aussenkante herausfinden
 
@@ -588,7 +569,6 @@ def Streckenerkennung2():
     diff_y = punkt_a_y - punkt_b_y
 
     laenge = np.sqrt(diff_x * diff_x + diff_y * diff_y)
-    # print(laenge)
 
     abstaende = []  # Leere Liste mit den Laengen anlegen
 
@@ -598,10 +578,10 @@ def Streckenerkennung2():
         vektor_x = richtung / laenge * diff_y
         vektor_y = -richtung / laenge * diff_x
 
-        # Abstand zum Aussenrand / Aussenkante berechnen
+        # Abstand zur aeusseren Kante berechnen
         abstand = 1  # Abstand auf 1 Pixel setzen
-        test_x = 1  # Testpunkt auf linken oberen Rand setzen (sollte ausserhalb der Strecke sein)
-        test_y = 1
+        test_x = punkt_a_x  # Testpunkt auf startpunkt setzen
+        test_y = punkt_a_y
         while (img_strecke[test_y - 1:test_y + 1, test_x - 1: test_x + 1, 2] == 0).all():
             test_x = int(punkt_a_x + abstand * vektor_x)  # Neuen Testpunkt (X) berechnen
             test_y = int(punkt_a_y + abstand * vektor_y)  # Neuen Testpunkt (Y) berechnen
@@ -614,6 +594,7 @@ def Streckenerkennung2():
         richtung = -1
     else:
         richtung = 1
+
 
     # 8. Abstaende zwischen Innen- und Aussenkante auf gesamter Strecke herausfinden und speichern
 
@@ -636,7 +617,6 @@ def Streckenerkennung2():
 
         # Laenge des Vektors berechnen
         laenge = np.double(np.sqrt(diff_x * diff_x + diff_y * diff_y))
-        # print(laenge)
 
         # Orthogonalen Einheitsvektor berechnen (mit vorher berechneter Richtung)
         vektor_x = -richtung / laenge * diff_y
@@ -644,8 +624,8 @@ def Streckenerkennung2():
 
         # Laenge zum Aussenrand berechnen (in richtige Richtung)
         abstand = 1  # Abstand auf 1 Pixel setzen
-        test_x = 1  # Testpunkt auf linken oberen Rand setzen (sollte ausserhalb der Strecke sein)
-        test_y = 1
+        test_x = punkt_a_x  # Testpunkt auf startpunkt setzen
+        test_y = punkt_a_y
         while (img_strecke[test_y - 1:test_y + 1, test_x - 1: test_x + 1, 2] == 0).all():
             test2_x = test_x
             test2_y = test_y
@@ -655,7 +635,6 @@ def Streckenerkennung2():
             if (test2_x != test_x) or (test2_y != test_y):
                 if (abs(test_x) < x_max) and (abs(test_y) < y_max):
                     if img_strecke[test_y, test_x, 1] == 0:
-                        # print(test_x, test_y)
                         img_strecke[test_y, test_x, 1] = 255
                     else:
                         abstand = -1
@@ -664,9 +643,7 @@ def Streckenerkennung2():
                     break
             abstand += 1  # Ein Pixel zum Abstand hochzaehlen
 
-        # print(distanz)  # Distanz ausgeben
         abstaende[int(i / stp)] = abstand  # Abstand in Array speichern
-        # img_strecke[int(punkt_a_y + abstand * vektor_y), int(punkt_a_x + abstand * vektor_x), 1] = 255
         a = int(i / stp)
 
     i = 0
@@ -678,9 +655,8 @@ def Streckenerkennung2():
         i += 1
 
     # Alle Laengen ausgeben
-    print('Streckenbreiten: ', abstaende)
+    # print('Streckenbreiten: ', abstaende)
 
-    # TODO !!
 
     # 9. Bilder anzeigen und speichern
 
@@ -689,17 +665,18 @@ def Streckenerkennung2():
     # cv.namedWindow('Strecke', cv.WINDOW_NORMAL)
     # cv.imshow('Strecke', img_strecke)
     # cv.resizeWindow('Strecke', x_max, y_max)
+    # Warte auf Tastendruck (sonst sieht man die cv Fenster nicht)
+    # key = cv.waitKey(0)
+    # Schliesse alle cv Fenster
+    # cv.destroyAllWindows()
 
-    cv.imwrite("C:/Users/samir/Desktop/test2.jpg", img_debug)
+    # Debugbild speichern
+    # cv.imwrite("C:/Users/samir/Desktop/test2.jpg", img_debug)
 
+    # Strecke in festgelegtem Bild speichern und im Hauptfenster anzeigen
     cv.imwrite(img_strecke_path, img_strecke)
     ui.label.setPixmap(QtGui.QPixmap(img_strecke_path))
 
-    # Warte auf Tastendruck (sonst sieht man die cv Fenster nicht)
-    # key = cv.waitKey(0)
-
-    # Schliesse alle cv Fenster
-    # cv.destroyAllWindows()
 
 
 #############################
@@ -733,4 +710,3 @@ ui2.pushButton_6.clicked.connect(lambda: close_diaglogs(5))
 
 # GUI (Programm) ausfuehren
 sys.exit(app.exec_())
-
