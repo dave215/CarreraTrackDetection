@@ -77,4 +77,3 @@ ui1 = Ui_Dialog1()
 ui1.setupUi(Dialog1)
 # Dialog1.show()
 # sys.exit(app1.exec_())
-
