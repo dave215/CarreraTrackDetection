@@ -147,7 +147,7 @@ def rand_ablaufen(kante_x, kante_y, farbe):
         if kante_x == rand_x and kante_y == rand_y:
             break
 
-        # Gefundenen Punkt der Kante rot einfaerben
+        # Gefundenen Punkt der Kante mit der uebergebenen Farbe einfaerben
         img_strecke[kante_y, kante_x] = farbe
         img_debug[kante_y, kante_x] = farbe
 
@@ -221,20 +221,20 @@ def maske_erstellen(orig_img, untere_grenze=0, obere_grenze=80, area_x=26, area_
 
 # Bild fuer Streckenerkennung einlesen
 def selectInputFile():
-    # falls Kamera ausgewählt, Fehler anzeigen
+    # falls Kamera ausgewaehlt, Fehler anzeigen
     if ui.comboBox.currentText() == "Kamera":
         ui.lineEdit.setText(Fehler3)
         ui.label.clear()
-    # Pfad auswählen
+    # Pfad auswaehlen
     else:
         global img_path
         img_path, _ = QFileDialog.getOpenFileName()  # Explorer oeffnen und Pfad waehlen
         laengeImg = len(img_path)
         ending = img_path[laengeImg-4:laengeImg]
         # Dateiformat (Ende des Pfads) auf Bild ueberpruefen
-        if (ending == ".jpg" or ending == ".png" or ending == ".PNG" or ending == "jpeg" or ending == ".JPG"):
+        if ending == ".jpg" or ending == ".png" or ending == ".PNG" or ending == "jpeg" or ending == ".JPG":
             ui.lineEdit.setText(img_path) # Pfad setzen
-            ui.label.setPixmap(QtGui.QPixmap(img_path)) # Bild anzeigen
+            ui.label.setPixmap(QtGui.QPixmap(img_path))  # Bild anzeigen
         # Falsches Dateiformat, Fehler ausgeben
         else:
             ui.lineEdit.setText(Fehler1)
@@ -247,8 +247,8 @@ def selectOutputFile():
     laengeImg = len(img_strecke_path)
     ending = img_strecke_path[laengeImg - 4:laengeImg]
     # Dateiformat (Ende des Pfads) auf Bild ueberpruefen
-    if (ending == ".jpg" or ending == ".png" or ending == ".PNG" or ending == "jpeg" or ending == ".JPG"):
-        ui.lineEdit_2.setText(img_strecke_path) # Pfad setzen
+    if ending == ".jpg" or ending == ".png" or ending == ".PNG" or ending == "jpeg" or ending == ".JPG":
+        ui.lineEdit_2.setText(img_strecke_path)  # Pfad setzen
     # Falsches Dateiformat, Fehler ausgeben
     else:
         ui.lineEdit_2.setText(Fehler1)
@@ -369,8 +369,8 @@ def Streckenerkennung():
     # Ermittle Bildgroesse
     global y_max
     global x_max
-    y_max = len(frame[:, 0])  # Breite des Bilds
-    x_max = len(frame[0, :])  # Hoehe des Bilds
+    y_max = len(frame[:, 0])  # Hoehe des Bilds
+    x_max = len(frame[0, :])  # Breite des Bilds
 
     # Ueberpruefen, ob das Bild im Hochformat ist. Wenn ja, das Bild auf Querformat drehen
     if x_max < y_max:
@@ -427,10 +427,6 @@ def Streckenerkennung2():
 
     # 3. Punkt der Strecke in Maske suchen
 
-    # Neues leeres (schwarzes) Bild erstellen
-    global img_strecke
-    img_strecke = np.zeros((y_max, x_max, 3), np.uint8)
-
     # Grob auf 20 Punkten auf der Diagonale nach Strecke schauen
     testpoints = 20
     x_step = int(x_max / testpoints)
@@ -475,6 +471,10 @@ def Streckenerkennung2():
     # 4.1 Rand finden
     # 4.2 Kante ablaufen
 
+    # Neues leeres (schwarzes) Bild erstellen
+    global img_strecke
+    img_strecke = np.zeros((y_max, x_max, 3), np.uint8)
+
     # Von dem gefundenen Startpunkt auf der Strecke in verschiedenen Richtungen (insgesamt 8 Richtungen) den Rand der
     # Maske suchen und von dort die Kanten ablaufen
 
@@ -497,7 +497,7 @@ def Streckenerkennung2():
         (raender_x[i], raender_y[i]) = rand_finden(punkt_x, punkt_y, step_list_x[i], step_list_y[i])
 
         # Wenn ein "neuer" Rand gefunden worden ist, dann laufe die Kante ab
-        if not (raender_x[i] == 0 and raender_y[i] == 0):
+        if not(raender_x[i] == 0 and raender_y[i] == 0):
             # Kante ablaufen und mit bestimmter Farbe markieren
             counts[i], _ = rand_ablaufen(raender_x[i], raender_y[i], test_farbe)
 
@@ -676,7 +676,6 @@ def Streckenerkennung2():
     # Strecke in festgelegtem Bild speichern und im Hauptfenster anzeigen
     cv.imwrite(img_strecke_path, img_strecke)
     ui.label.setPixmap(QtGui.QPixmap(img_strecke_path))
-
 
 
 #############################
