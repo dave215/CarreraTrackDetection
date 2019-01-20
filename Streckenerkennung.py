@@ -419,14 +419,13 @@ def Streckenerkennung():
 
 # Streckenerkennung Teil 2
 def Streckenerkennung2():
+    # 3. Punkt der Strecke in Maske suchen
+    
     # Kopie der neuen, bearbeiteten Maske erstellen und zu Farbbild konvertieren
     global img_debug
     img_debug = mask.copy()
     img_debug = cv.cvtColor(img_debug, cv.COLOR_GRAY2BGR)
-
-
-    # 3. Punkt der Strecke in Maske suchen
-
+    
     # Grob auf 20 Punkten auf der Diagonale nach Strecke schauen
     testpoints = 20
     x_step = int(x_max / testpoints)
