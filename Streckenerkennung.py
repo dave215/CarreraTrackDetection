@@ -173,48 +173,43 @@ def maske_erstellen(orig_img, untere_grenze=0, obere_grenze=80, area_x=14, area_
     # Kopie der Maske erstellen
     mask2 = mask_img.copy()
 
-    # Haelfte des Bereichs bestimmen (fuer X und Y) (nach uebergebenen Werten)
-    area2_x = int(area_x / 2)
-    area2_y = int(area_y / 2)
-
     # Kleine Bereiche aus der Maske entfernen
     # Schwellwerte in der Maske ueberpruefen
-    for x in range(area2_x, x_max - area2_x, area_x):  # X-Werte durchgehen
-        for y in range(area2_y, y_max - area2_y, area_y):  # Y-Werte durchgehen
+    for x in range(0, x_max - area_x + 1, area_x):  # X-Werte durchgehen
+        for y in range(0, y_max - area_y + 1, area_y):  # Y-Werte durchgehen
             # Area of Interest aus kopierter Maske herauskopieren
-            copy = (mask2[y - area2_y:y + area2_y, x - area2_x:x + area2_x])
-            if copy.sum() <= area2_x * 250:  # Anzahl der Pixel auf Schwellwert ueberpruefen
+            copy = (mask2[y:y + area_y, x:x + area_x])
+            if copy.sum() <= area_x / 2 * 250:  # Anzahl der Pixel auf Schwellwert ueberpruefen
                 # Wenn zu wenig Pixel in diesem Bereich Weiss sind, dann wird der Bereich in der Maske
                 # auf Null (Schwarz) gesetzt
-                mask_img[y - area2_y:y + area2_y, x - area2_x:x + area2_x] = 0
+                mask_img[y:y + area_y, x:x + area_x] = 0
             else:  # Sonst wird der Bereich auf Weiss gesetzt
-                mask_img[y - area2_y:y + area2_y, x - area2_x:x + area2_x] = 255
+                mask_img[y:y + area_y, x:x + area_x] = 255
 
     # Maske optimieren
-    for x in range(area2_x, x_max - area2_x, area_x):  # X-Werte durchgehen
-        for y in range(area2_y, y_max - area2_y, area_y):  # Y-Werte durchgehen
+    for x in range(0, x_max - area_x + 1, area_x):  # X-Werte durchgehen
+        for y in range(0, y_max - area_y + 1, area_y):  # Y-Werte durchgehen
             temp = mask_img[y, x]
-            if (x <= area_x and y <= area_y) or (x <= area_x and y >= y_max - area2_y - area_y + 1) or \
-                    (x >= x_max - area2_x - area_x + 1 and y <= area_y) or \
-                    (x >= x_max - area2_x - area_x + 1 and y >= y_max - area2_y - area_y + 1):
+            if (x == 0 and y == 0) or (x == 0 and y >= y_max - area_y + 1) or \
+                    (x >= x_max - area_x + 1 and y == 0) or \
+                    (x >= x_max - area_x + 1 and y >= y_max - area_y + 1):
                 continue
-            elif (x == area2_x) and mask_img[y - area_y, x] != temp and mask_img[y + area_y, x] != temp and \
-                    mask_img[y, x + area_x] != temp:
-                mask_img[y - area2_y:y + area2_y, x - area2_x:x + area2_x] = mask_img[y - area_y, x]
-            elif x >= x_max - area2_x - area_x + 1 and mask_img[y - area_y, x] != temp and \
-                    mask_img[y + area_y, x] != temp and mask_img[y, x - area_x] != temp:
-                mask_img[y - area2_y:y + area2_y, x - area2_x:x + area2_x] = mask_img[y - area_y, x]
-            elif (y == area2_y) and mask_img[y + area_y, x] != temp and mask_img[y, x - area_x] != temp and \
-                    mask_img[y, x + area_x] != temp:
-                mask_img[y - area2_y:y + area2_y, x - area2_x:x + area2_x] = mask_img[y + area_y, x]
-            elif (y >= y_max - area2_y - area_y + 1):
-                if mask_img[y - area_y, x] != temp and mask_img[y, x - area_x] != temp and \
-                        mask_img[y, x + area_x] != temp:
-                    mask_img[y - area2_y:y + area2_y, x - area2_x:x + area2_x] = mask_img[y - area_y, x]
+            elif (x == 0) and mask_img[y - area_y + 1, x] != temp and mask_img[y + area_y + 1, x] != temp and \
+                    mask_img[y, x + area_x + 1] != temp:
+                mask_img[y:y + area_y, x:x + area_x] = mask_img[y - area_y + 1, x]
+            elif (x >= x_max - area_x + 1) and mask_img[y - area_y + 1, x] != temp and \
+                    mask_img[y + area_y + 1, x] != temp and mask_img[y, x - area_x + 1] != temp:
+                mask_img[y:y + area_y, x:x + area_x] = mask_img[y - area_y + 1, x]
+            elif (y == 0) and mask_img[y + area_y + 1, x] != temp and mask_img[y, x - area_x + 1] != temp and \
+                    mask_img[y, x + area_x + 1] != temp:
+                mask_img[y:y + area_y, x:x + area_x] = mask_img[y + area_y + 1, x]
+            elif y >= y_max - area_y + 1 and mask_img[y - area_y + 1, x] != temp and \
+                    mask_img[y, x - area_x + 1] != temp and mask_img[y, x + area_x + 1] != temp:
+                mask_img[y:y + area_y, x:x + area_x] = mask_img[y - area_y + 1, x]
             else:
-                if mask_img[y - area_y, x] != temp and mask_img[y + area_y, x] != temp and \
-                        mask_img[y, x - area_x] != temp and mask_img[y, x + area_x] != temp:
-                    mask_img[y - area2_y:y + area2_y, x - area2_x:x + area2_x] = mask_img[y - area_y, x]
+                if mask_img[y - area_y + 1, x] != temp and mask_img[y + area_y + 1, x] != temp and \
+                        mask_img[y, x - area_x + 1] != temp and mask_img[y, x + area_x + 1] != temp:
+                    mask_img[y:y + area_y, x:x + area_x] = mask_img[y - area_y + 1, x]
 
     return mask_img  # Maske zurueckgeben
 
