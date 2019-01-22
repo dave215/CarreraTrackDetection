@@ -163,7 +163,7 @@ def rand_ablaufen(kante_x, kante_y, farbe):
 
 
 # Funktion zum Erstellen der Maske mit unterschiedlichen Grenzen
-def maske_erstellen(orig_img, untere_grenze=0, obere_grenze=80, area_x=26, area_y=26):
+def maske_erstellen(orig_img, untere_grenze=0, obere_grenze=80, area_x=14, area_y=14):
     # Definiere Farb-Ranges
     lower_color = (untere_grenze, untere_grenze, untere_grenze)
     upper_color = (obere_grenze, obere_grenze, obere_grenze)
@@ -390,8 +390,8 @@ def Streckenerkennung():
     # Groesse des Durchsuch-Bereichs festlegen. Hier: 26x26
     global area_x
     global area_y
-    area_x = 26
-    area_y = 26
+    area_x = 14
+    area_y = 14
 
     mask_array = []
     # Fuer alle angegebenen oberen Grenzwerte Masken zeichnen und ausgeben
