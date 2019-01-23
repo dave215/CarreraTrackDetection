@@ -535,7 +535,7 @@ def Streckenerkennung2():
     # print('Laenge Innenkante:', count_innen)
 
 
-    # 6. Kanten glaetten und Bild aufhellen
+    # 6. Kanten glaetten
 
     # Innenkante glaetten
     kante_innen = kanten_glaetten(kante_innen, count_innen, (255, 0, 0))
