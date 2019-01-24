@@ -555,8 +555,8 @@ def Streckenerkennung2():
     punkt_a_y = kante_innen[0, 1]
 
     # Bestimme Anzahl an Pixeln Rand ablaufen
-    punkt_b_x = kante_innen[2 * stp, 0]
-    punkt_b_y = kante_innen[2 * stp, 1]
+    punkt_b_x = kante_innen[stp, 0]
+    punkt_b_y = kante_innen[stp, 1]
 
     # Berechne Vektor zwischen den beiden Punkten
     diff_x = punkt_a_x - punkt_b_x
