@@ -593,17 +593,21 @@ def Streckenerkennung2():
     # 8. Abstaende zwischen Innen- und Aussenkante auf gesamter Strecke herausfinden und speichern
 
     # Array fuer Abstaende anlegen
-    abstaende = np.zeros(int((count_innen - stp) / stp + 1), dtype=np.int16)
+    abstaende = np.zeros(int((count_innen - stp) / stp + 2), dtype=np.int16)
 
     # Gesamte Strecke ablaufen
-    for i in range(stp, count_innen - stp, stp):
+    for i in range(stp, count_innen, stp): # - stp, stp):
         # Randpunkt innen auswaehlen
         punkt_a_x = kante_innen[i - stp, 0]
         punkt_a_y = kante_innen[i - stp, 1]
 
-        # Bestimme Anzahl an Pixeln Rand ablaufen
-        punkt_b_x = kante_innen[i + stp, 0]
-        punkt_b_y = kante_innen[i + stp, 1]
+        if i < count_innen - stp:
+            # Bestimme Anzahl an Pixeln Rand ablaufen
+            punkt_b_x = kante_innen[i + stp, 0]
+            punkt_b_y = kante_innen[i + stp, 1]
+        else:
+            punkt_b_x = kante_innen[i, 0]
+            punkt_b_y = kante_innen[i, 1]
 
         # Berechne Vektor zwischen den beiden Punkten
         diff_x = punkt_a_x - punkt_b_x
