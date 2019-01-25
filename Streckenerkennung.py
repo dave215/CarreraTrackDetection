@@ -596,10 +596,14 @@ def Streckenerkennung2():
     abstaende = np.zeros(int((count_innen - stp) / stp + 2), dtype=np.int16)
 
     # Gesamte Strecke ablaufen
-    for i in range(stp, count_innen, stp): # - stp, stp):
+    for i in range(0, count_innen, stp): # - stp, stp):
         # Randpunkt innen auswaehlen
-        punkt_a_x = kante_innen[i - stp, 0]
-        punkt_a_y = kante_innen[i - stp, 1]
+        if i > 0:
+            punkt_a_x = kante_innen[i - stp, 0]
+            punkt_a_y = kante_innen[i - stp, 1]
+        else:
+            punkt_a_x = kante_innen[i, 0]
+            punkt_a_y = kante_innen[i, 1]
 
         if i < count_innen - stp:
             # Bestimme Anzahl an Pixeln Rand ablaufen
