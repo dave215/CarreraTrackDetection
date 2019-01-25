@@ -650,10 +650,10 @@ def Streckenerkennung2():
             abstand += 1  # Ein Pixel zum Abstand hochzaehlen
 
         abstaende[int(i / stp)] = abstand  # Abstand in Array speichern
-        a = int(i / stp)
-
+    
+    a = len(abstaende)
     i = 0
-    while i <= a:
+    while i < a:
         if abstaende[i] == -1:
             abstaende = np.delete(abstaende, i)
             a -= 1
