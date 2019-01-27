@@ -454,8 +454,7 @@ def Streckenerkennung2():
 
     # Markiere Punkt im Debugbild
     cv.circle(img_debug, (punkt_x, punkt_y), 20, (0, 255, 0), 3)
-    # cv.imwrite("C:/Users/David/Desktop/Oval3_4_Startpunkt.jpg", img_debug)
-
+    
 
     # 4. Streckenraender suchen und Kanten ablaufen
     # 4.1 Rand finden
@@ -494,8 +493,6 @@ def Streckenerkennung2():
     # Unterschiedliche Kantenlaengen anzeigen
     # print('Kantenlaengen:', counts)
 
-    # cv.imwrite("C:/Users/David/Desktop/Oval3_4_Kanten.jpg", img_strecke)
-
 
     # 5. Innen- und Aussenkante aus allen Kanten finden, farbig markieren und Daten speichern
 
@@ -531,8 +528,6 @@ def Streckenerkennung2():
     # Kantenlaengen anzeigen
     # print('Laenge Aussenkante:', count_aussen)
     # print('Laenge Innenkante:', count_innen)
-
-    cv.imwrite("C:/Users/David/Desktop/Oval3_4_Kanten2.jpg", img_strecke)
 
 
     # 6. Kanten glaetten
@@ -642,7 +637,6 @@ def Streckenerkennung2():
         abstaende[int(i / stp)] = abstand  # Abstand in Array speichern
 
     a = len(abstaende)
-
     i = 0
     while i < a:
         if abstaende[i] == -1:
