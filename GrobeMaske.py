@@ -53,10 +53,6 @@ class Ui_Dialog1(object):
         self.label120.setScaledContents(True)
         self.label120.setObjectName("Mask120")
 
-        # self.Mask120 = QtWidgets.QGraphicsView(Dialog)
-        # self.Mask120.setGeometry(QtCore.QRect(400, 280, 321, 221))
-        # self.Mask120.setObjectName("Mask120")
-
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
@@ -67,13 +63,10 @@ class Ui_Dialog1(object):
         self.pushButton_2.setText(_translate("Dialog", "80"))
         self.pushButton_3.setText(_translate("Dialog", "100"))
         self.pushButton_4.setText(_translate("Dialog", "120"))
+        
 
-
-# if __name__ == "__main__":
 import sys
 app1 = QtWidgets.QApplication(sys.argv)
 Dialog1 = QtWidgets.QDialog()
 ui1 = Ui_Dialog1()
 ui1.setupUi(Dialog1)
-# Dialog1.show()
-# sys.exit(app1.exec_())
