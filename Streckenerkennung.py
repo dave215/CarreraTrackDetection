@@ -244,7 +244,7 @@ def selectOutputFile():
         ui.lineEdit_2.setText(Fehler1)
 
 
-# Pruefen, dass alle benötigten Parameter vorhanden sind
+# Pruefen, dass alle benoetigten Parameter vorhanden sind
 def test_if_parameters_fit():
     # Bild ueber Kamera einlesen
     if ui.comboBox.currentText() == "Kamera":
@@ -252,10 +252,10 @@ def test_if_parameters_fit():
         if (ui.lineEdit_2.text() != "" and ui.lineEdit_2.text() != Fehler1 and ui.lineEdit_2.text() != Fehler2):
             # TODO: Kamerabild aufnehmen
             # Streckenerkennung()  # Streckenerkennung starten
-            ui.lineEdit.setText("Funktion noch in Entwicklung, bitte Bild auswählen")
+            ui.lineEdit.setText("Funktion noch in Entwicklung, bitte Bild auswaehlen")
         else:
             ui.lineEdit_2.setText(Fehler2)  # Fehler ausgeben, dass Datei fehlt
-    # Bild über Dateipfad einlesen
+    # Bild ueber Dateipfad einlesen
     else:
         # Pfad zu Datei und Speicher vorhanden
         if ((ui.lineEdit_2.text() != "" and ui.lineEdit_2.text() != Fehler1 and ui.lineEdit_2.text() != Fehler2) and \
@@ -324,7 +324,7 @@ def close_diaglogs(zweiteMaske):
     global mask
     mask = mask_genau[zweiteMaske]  # Beste Maske speichern
 
-    # Fesnter schließen
+    # Fesnter schliessen
     Dialog2.close()
     Dialog1.close()
 
