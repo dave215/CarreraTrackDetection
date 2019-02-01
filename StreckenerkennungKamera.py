@@ -236,7 +236,8 @@ def selectInputFile():
             camera.start_preview()
             sleep(5)
             camera.capture(img_path)
-            camera.stop_preview() 
+            camera.stop_preview()
+            camera.close()  # Kamera-Interface schliessen, damit man es nochmal oeffnen kann
             ui.label.setPixmap(QtGui.QPixmap(img_path))  # Bild anzeigen
         # Falsches Dateiformat, Fehler ausgeben
         else:
