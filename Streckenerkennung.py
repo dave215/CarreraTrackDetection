@@ -1,6 +1,8 @@
 # Bibliotheken importieren
-import cv2 as cv    # OpenCV
+import cv2 as cv  # OpenCV
 import numpy as np  # NumPy
+# from picamera import PiCamera
+from time import sleep
 
 import sys
 from PyQt5.QtWidgets import QApplication, QDialog, QMainWindow, QFileDialog, QLineEdit
@@ -8,7 +10,6 @@ from PyQt5.QtGui import QPixmap
 from Modellbahnerkennung import *
 from GrobeMaske import *
 from GenaueMaske import *
-
 
 #############################
 # GLOBALE VARIABLEN         #
@@ -41,8 +42,8 @@ def kanten_glaetten(kanten_array, pixel_count, farbe, step_size=50):
 
     # In einer Schleife die Kantenpunkte mit bestimmter Schrittweite ablaufen
     for a in range(step_size, pixel_count - step_size, step_size):
-        diff_step_x = (kanten_array[a, 0] - start_x) / step_size
-        diff_step_y = (kanten_array[a, 1] - start_y) / step_size
+        diff_step_x = float((kanten_array[a, 0] - start_x)) / step_size
+        diff_step_y = float((kanten_array[a, 1] - start_y)) / step_size
 
         # Zwischen den Kantenpunkten interpolieren (Linie glaetten) und diese Linie zeichnen
         for b in range(a - step_size, a - 1):
@@ -99,7 +100,8 @@ def rand_ablaufen(kante_x, kante_y, farbe):
     # Zaehlvariable definieren und nullsetzen
     pixel_count = 0
     kanten_array = np.zeros((10000, 2), dtype=np.int16)
-    kanten_array[0] = (kante_x, kante_y)
+    kanten_array[0, 0] = kante_x
+    kanten_array[0, 1] = kante_y
 
     # Stoppen, falls "verlaufen"
     while pixel_count < 9999:
@@ -143,12 +145,13 @@ def rand_ablaufen(kante_x, kante_y, farbe):
         if kante_x == rand_x and kante_y == rand_y:
             break
 
-        # Gefundenen Punkt der Kante mit der uebergebenen Farbe einfaerben
+        # Gefundenen Punkt der Kante rot einfaerben
         img_strecke[kante_y, kante_x] = farbe
         img_debug[kante_y, kante_x] = farbe
 
         # Punkt in Array abspeichern
-        kanten_array[pixel_count] = (kante_x, kante_y)
+        kanten_array[pixel_count, 0] = kante_x
+        kanten_array[pixel_count, 1] = kante_y
 
     # Array auf benoetigte Laenge kuerzen
     kanten_array = kanten_array[0:pixel_count, :]
@@ -158,7 +161,7 @@ def rand_ablaufen(kante_x, kante_y, farbe):
 
 
 # Funktion zum Erstellen der Maske mit unterschiedlichen Grenzen
-def maske_erstellen(orig_img, untere_grenze=0, obere_grenze=80, area_x=14, area_y=14):
+def maske_erstellen(orig_img, untere_grenze=0, obere_grenze=80, area_x=26, area_y=26):
     # Definiere Farb-Ranges
     lower_color = (untere_grenze, untere_grenze, untere_grenze)
     upper_color = (obere_grenze, obere_grenze, obere_grenze)
@@ -167,6 +170,10 @@ def maske_erstellen(orig_img, untere_grenze=0, obere_grenze=80, area_x=14, area_
     mask_img = cv.inRange(orig_img, lower_color, upper_color)
     # Kopie der Maske erstellen
     mask2 = mask_img.copy()
+
+    # Haelfte des Bereichs bestimmen (fuer X und Y) (nach uebergebenen Werten)
+    # area2_x = int(area_x / 2)
+    # area2_y = int(area_y / 2)
 
     # Kleine Bereiche aus der Maske entfernen
     # Schwellwerte in der Maske ueberpruefen
@@ -211,18 +218,37 @@ def maske_erstellen(orig_img, untere_grenze=0, obere_grenze=80, area_x=14, area_
 
 # Bild fuer Streckenerkennung einlesen
 def selectInputFile():
+    global img_path
     # falls Kamera ausgewaehlt, Fehler anzeigen
     if ui.comboBox.currentText() == "Kamera":
-        ui.lineEdit.setText(Fehler3)
+        # ui.lineEdit.setText(Fehler3)
         ui.label.clear()
-    # Pfad auswaehlen
-    else:
-        global img_path
-        img_path, _ = QFileDialog.getOpenFileName()  # Explorer oeffnen und Pfad waehlen
+        img_path, _ = QFileDialog.getSaveFileName()  # Bildpfad der Kamera festlegen Abspeichern
         laengeImg = len(img_path)
         ending = img_path[laengeImg - 4:laengeImg]
         # Dateiformat (Ende des Pfads) auf Bild ueberpruefen
         if ending == ".jpg" or ending == ".png" or ending == ".PNG" or ending == "jpeg" or ending == ".JPG":
+            ui.lineEdit.setText(img_path)  # Pfad setzen
+
+            from picamera import PiCamera  # Nur benoetigt, wenn das Programm auf dem Pi laeuft
+            camera = PiCamera()  # Kamera-Interface oeffnen
+            camera.start_preview()
+            sleep(5)
+            camera.capture(img_path)
+            camera.stop_preview()
+            camera.close()  # Kamera-Interface schliessen, damit man es nochmal oeffnen kann
+            ui.label.setPixmap(QtGui.QPixmap(img_path))  # Bild anzeigen
+        # Falsches Dateiformat, Fehler ausgeben
+        else:
+            ui.lineEdit.setText(Fehler1)
+
+    # Pfad auswaehlen
+    else:
+        img_path, _ = QFileDialog.getOpenFileName()  # Explorer oeffnen und Pfad waehlen
+        laengeImg = len(img_path)
+        ending = img_path[laengeImg - 4:laengeImg]
+        # Dateiformat (Ende des Pfads) auf Bild ueberpruefen
+        if (ending == ".jpg" or ending == ".png" or ending == ".PNG" or ending == "jpeg" or ending == ".JPG"):
             ui.lineEdit.setText(img_path)  # Pfad setzen
             ui.label.setPixmap(QtGui.QPixmap(img_path))  # Bild anzeigen
         # Falsches Dateiformat, Fehler ausgeben
@@ -237,7 +263,7 @@ def selectOutputFile():
     laengeImg = len(img_strecke_path)
     ending = img_strecke_path[laengeImg - 4:laengeImg]
     # Dateiformat (Ende des Pfads) auf Bild ueberpruefen
-    if ending == ".jpg" or ending == ".png" or ending == ".PNG" or ending == "jpeg" or ending == ".JPG":
+    if (ending == ".jpg" or ending == ".png" or ending == ".PNG" or ending == "jpeg" or ending == ".JPG"):
         ui.lineEdit_2.setText(img_strecke_path)  # Pfad setzen
     # Falsches Dateiformat, Fehler ausgeben
     else:
@@ -250,9 +276,8 @@ def test_if_parameters_fit():
     if ui.comboBox.currentText() == "Kamera":
         # Pfad zu Speicher vorhanden
         if (ui.lineEdit_2.text() != "" and ui.lineEdit_2.text() != Fehler1 and ui.lineEdit_2.text() != Fehler2):
-            # TODO: Kamerabild aufnehmen
-            # Streckenerkennung()  # Streckenerkennung starten
-            ui.lineEdit.setText("Funktion noch in Entwicklung, bitte Bild auswaehlen")
+            Streckenerkennung()
+            # ui.lineEdit.setText("Funktion noch in Entwicklung, bitte Bild auswaehlen")
         else:
             ui.lineEdit_2.setText(Fehler2)  # Fehler ausgeben, dass Datei fehlt
     # Bild ueber Dateipfad einlesen
@@ -324,7 +349,7 @@ def close_diaglogs(zweiteMaske):
     global mask
     mask = mask_genau[zweiteMaske]  # Beste Maske speichern
 
-    # Fesnter schliessen
+    # Fenster schliessen
     Dialog2.close()
     Dialog1.close()
 
@@ -359,8 +384,8 @@ def Streckenerkennung():
     # Ermittle Bildgroesse
     global y_max
     global x_max
-    y_max = len(frame[:, 0])  # Hoehe des Bilds
-    x_max = len(frame[0, :])  # Breite des Bilds
+    y_max = len(frame[:, 0])  # Breite des Bilds
+    x_max = len(frame[0, :])  # Hoehe des Bilds
 
     # Ueberpruefen, ob das Bild im Hochformat ist. Wenn ja, das Bild auf Querformat drehen
     if x_max < y_max:
@@ -369,7 +394,6 @@ def Streckenerkennung():
         temp = x_max
         x_max = y_max
         y_max = temp
-
 
     # 2. Masken erstellen und auswaehlen
 
@@ -390,6 +414,11 @@ def Streckenerkennung():
         temp = maske_erstellen(frame, lower_value, upper_value, area_x, area_y)
         mask_array.append(temp)
 
+    # cv.imwrite("C:/Users/samir/Desktop/Maske60.jpg", mask_array[0])
+    # cv.imwrite("C:/Users/samir/Desktop/Maske80.jpg", mask_array[1])
+    # cv.imwrite("C:/Users/samir/Desktop/Maske100.jpg", mask_array[2])
+    # cv.imwrite("C:/Users/samir/Desktop/Maske120.jpg", mask_array[3])
+
     # GUI
     # Masken anzeigbar machen
     mask60 = bild_umwandeln(mask_array[0])
@@ -409,12 +438,19 @@ def Streckenerkennung():
 
 # Streckenerkennung Teil 2
 def Streckenerkennung2():
-    # 3. Punkt der Strecke in Maske suchen
-
     # Kopie der neuen, bearbeiteten Maske erstellen und zu Farbbild konvertieren
     global img_debug
     img_debug = mask.copy()
     img_debug = cv.cvtColor(img_debug, cv.COLOR_GRAY2BGR)
+
+    # Maske speichern
+    # cv.imwrite("C:/Users/samir/Desktop/Maske.jpg", mask)
+
+    # 3. Punkt der Strecke in Maske suchen
+
+    # Neues leeres (schwarzes) Bild erstellen
+    global img_strecke
+    img_strecke = np.zeros((y_max, x_max, 3), np.uint8)
 
     # Grob auf 20 Punkten auf der Diagonale nach Strecke schauen
     testpoints = 20
@@ -454,15 +490,11 @@ def Streckenerkennung2():
 
     # Markiere Punkt im Debugbild
     cv.circle(img_debug, (punkt_x, punkt_y), 20, (0, 255, 0), 3)
-    
+    # cv.imwrite("C:/Users/samir/Desktop/Startpunkt.jpg", img_debug)
 
     # 4. Streckenraender suchen und Kanten ablaufen
     # 4.1 Rand finden
     # 4.2 Kante ablaufen
-
-    # Neues leeres (schwarzes) Bild erstellen
-    global img_strecke
-    img_strecke = np.zeros((y_max, x_max, 3), np.uint8)
 
     # Von dem gefundenen Startpunkt auf der Strecke in verschiedenen Richtungen (insgesamt 8 Richtungen) den Rand der
     # Maske suchen und von dort die Kanten ablaufen
@@ -486,13 +518,12 @@ def Streckenerkennung2():
         (raender_x[i], raender_y[i]) = rand_finden(punkt_x, punkt_y, step_list_x[i], step_list_y[i])
 
         # Wenn ein "neuer" Rand gefunden worden ist, dann laufe die Kante ab
-        if not(raender_x[i] == 0 and raender_y[i] == 0):
+        if not (raender_x[i] == 0 and raender_y[i] == 0):
             # Kante ablaufen und mit bestimmter Farbe markieren
             counts[i], _ = rand_ablaufen(raender_x[i], raender_y[i], test_farbe)
 
     # Unterschiedliche Kantenlaengen anzeigen
     # print('Kantenlaengen:', counts)
-
 
     # 5. Innen- und Aussenkante aus allen Kanten finden, farbig markieren und Daten speichern
 
@@ -529,8 +560,7 @@ def Streckenerkennung2():
     # print('Laenge Aussenkante:', count_aussen)
     # print('Laenge Innenkante:', count_innen)
 
-
-    # 6. Kanten glaetten
+    # 6. Kanten glaetten und Bild aufhellen
 
     # Innenkante glaetten
     kante_innen = kanten_glaetten(kante_innen, count_innen, (255, 0, 0))
@@ -540,14 +570,12 @@ def Streckenerkennung2():
     kante_aussen = kanten_glaetten(kante_aussen, count_aussen, (0, 0, 255))
     kante_aussen = kanten_glaetten(kante_aussen, count_aussen, (0, 0, 255), 100)
 
-
     # 7. Richtung zwischen Innen- und Aussenkante herausfinden
 
     stp = 50  # Schrittweite
 
     # Richtung fuer kuerzeste Distanz herausfinden
     punkt_a_x, punkt_a_y = kante_innen[0]
-
     # Bestimme Anzahl an Pixeln Rand ablaufen
     punkt_b_x, punkt_b_y = kante_innen[stp]
 
@@ -562,8 +590,8 @@ def Streckenerkennung2():
     # Test der Richtungen -1 und 1
     for richtung in range(-1, 3, 2):
         # Orthogonalen Einheitsvektor berechnen (jeweils in eine andere Richtung)
-        vektor_x = richtung / laenge * diff_y
-        vektor_y = -richtung / laenge * diff_x
+        vektor_x = float(richtung) / laenge * diff_y
+        vektor_y = float(-richtung) / laenge * diff_x
 
         # Abstand zur aeusseren Kante berechnen
         abstand = 1  # Abstand auf 1 Pixel setzen
@@ -582,14 +610,13 @@ def Streckenerkennung2():
     else:
         richtung = 1
 
-
     # 8. Abstaende zwischen Innen- und Aussenkante auf gesamter Strecke herausfinden und speichern
 
     # Array fuer Abstaende anlegen
     abstaende = np.zeros(int((count_innen - stp) / stp + 2), dtype=np.int16)
 
     # Gesamte Strecke ablaufen
-    for i in range(0, count_innen, stp):
+    for i in range(0, count_innen, stp):  # - stp, stp):
         # Randpunkt innen auswaehlen
         if i > 0:
             punkt_a_x, punkt_a_y = kante_innen[i - stp]
@@ -610,8 +637,8 @@ def Streckenerkennung2():
         laenge = np.double(np.sqrt(diff_x * diff_x + diff_y * diff_y))
 
         # Orthogonalen Einheitsvektor berechnen (mit vorher berechneter Richtung)
-        vektor_x = -richtung / laenge * diff_y
-        vektor_y = richtung / laenge * diff_x
+        vektor_x = float(-richtung) / laenge * diff_y
+        vektor_y = float(richtung) / laenge * diff_x
 
         # Laenge zum Aussenrand berechnen (in richtige Richtung)
         abstand = 1  # Abstand auf 1 Pixel setzen
@@ -636,7 +663,7 @@ def Streckenerkennung2():
 
         abstaende[int(i / stp)] = abstand  # Abstand in Array speichern
 
-    a = len(abstaende)
+    a = len(abstaende[:])
     i = 0
     while i < a:
         if abstaende[i] == -1:
@@ -647,7 +674,6 @@ def Streckenerkennung2():
 
     # Alle Laengen ausgeben
     # print('Streckenbreiten: ', abstaende)
-
 
     # 9. Bilder anzeigen und speichern
 
